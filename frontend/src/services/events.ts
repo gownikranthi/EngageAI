@@ -1,10 +1,11 @@
 import api from './api';
 
 export interface Event {
-  id: string;
-  title: string;
+  _id: string; // Changed from id to _id for MongoDB consistency
+  name: string; // Changed from title to name
   description: string;
-  date: string;
+  startTime: string; // Using string for datetime-local input
+  endTime: string;   // Using string for datetime-local input
   location?: string;
   imageUrl?: string;
   participants?: string[];
@@ -14,7 +15,7 @@ export interface Event {
 }
 
 export interface Poll {
-  id: string;
+  _id: string;
   question: string;
   options: string[];
   results?: { [option: string]: number };
@@ -22,7 +23,7 @@ export interface Poll {
 }
 
 export interface Question {
-  id: string;
+  _id:string;
   text: string;
   author: string;
   timestamp: string;
@@ -30,7 +31,7 @@ export interface Question {
 }
 
 export interface Resource {
-  id: string;
+  _id: string;
   fileName: string;
   fileUrl: string;
   description?: string;
@@ -44,6 +45,12 @@ export const eventService = {
 
   async getEvent(id: string): Promise<Event> {
     const response = await api.get(`/events/${id}`);
+    return response.data;
+  },
+
+  // This is the new function you needed
+  async createEvent(eventData: Partial<Event>): Promise<Event> {
+    const response = await api.post('/events', eventData);
     return response.data;
   },
 
