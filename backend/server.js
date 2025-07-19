@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv-safe').config({ allowEmptyValues: false, example: './env.example.safe' });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -14,9 +14,12 @@ const eventRoutes = require('./routes/events');
 const engagementRoutes = require('./routes/engagement');
 const scoreRoutes = require('./routes/scores');
 const adminRoutes = require('./routes/admin');
+const { swaggerUi, specs } = require('./swagger');
 
 // Import Socket.IO handler
 const SocketHandler = require('./socket/socketHandler');
+const { generalLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
+const sanitizeMiddleware = require('./middleware/sanitize');
 
 // Initialize express app
 const app = express();
@@ -45,6 +48,10 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(sanitizeMiddleware);
+
+// Apply general rate limiter globally
+app.use(generalLimiter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -57,10 +64,11 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/events', eventRoutes);
+app.use('/api/v1/events', sensitiveLimiter, eventRoutes); // Sensitive limiter for event CRUD
 app.use('/api/v1/engage', engagementRoutes);
 app.use('/api/v1/scores', scoreRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // 404 handler
 app.use('*', (req, res) => {

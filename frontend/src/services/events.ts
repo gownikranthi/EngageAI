@@ -54,6 +54,16 @@ export const eventService = {
     return response.data;
   },
 
+  async updateEvent(eventId: string, eventData: Partial<Event>): Promise<Event> {
+    const response = await api.put(`/events/${eventId}`, eventData);
+    return response.data;
+  },
+
+  async deleteEvent(eventId: string): Promise<{ message: string }> {
+    const response = await api.delete(`/events/${eventId}`);
+    return response.data;
+  },
+
   async joinEvent(id: string): Promise<{ message: string }> {
     const response = await api.post(`/events/${id}/join`);
     return response.data;
