@@ -221,10 +221,10 @@ export const AdminPage: React.FC = () => {
 
   // Data preparation for charts
   const engagementData = analytics ? [
-    { name: 'Polls', value: analytics.engagementBreakdown.polls, color: '#007AFF' },
-    { name: 'Questions', value: analytics.engagementBreakdown.questions, color: '#34C759' },
-    { name: 'Downloads', value: analytics.engagementBreakdown.downloads, color: '#FF9500' },
-    { name: 'Time Spent', value: analytics.engagementBreakdown.timeSpent, color: '#AF52DE' },
+    { name: 'Polls', value: analytics.engagementBreakdown.polls || 0, color: '#007AFF' },
+    { name: 'Questions', value: analytics.engagementBreakdown.questions || 0, color: '#34C759' },
+    { name: 'Downloads', value: analytics.engagementBreakdown.downloads || 0, color: '#FF9500' },
+    { name: 'Time Spent', value: analytics.engagementBreakdown.timeSpent || 0, color: '#AF52DE' },
   ] : [];
 
   const topUsersData = analytics?.topUsers.map(user => ({
