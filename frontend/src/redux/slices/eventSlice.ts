@@ -19,7 +19,7 @@ const initialState: EventState = {
   error: null,
 };
 
-// Async thunks
+// Async thunks (No changes needed here)
 export const fetchEvents = createAsyncThunk<Event[]>(
   'event/fetchEvents',
   async (_, { rejectWithValue }) => {
@@ -53,16 +53,17 @@ export const joinEvent = createAsyncThunk<{ message: string }, string>(
   }
 );
 
+
 const eventSlice = createSlice({
   name: 'event',
   initialState,
+  // No changes needed in reducers
   reducers: {
     setCurrentEvent: (state, action: PayloadAction<Event>) => {
       state.currentEvent = action.payload;
     },
     updateCurrentEvent: (state, action: PayloadAction<Event>) => {
       state.currentEvent = action.payload;
-      // Update in events list too
       const index = state.events.findIndex(e => e.id === action.payload.id);
       if (index !== -1) {
         state.events[index] = action.payload;
@@ -73,7 +74,6 @@ const eventSlice = createSlice({
     },
     updatePoll: (state, action: PayloadAction<Poll>) => {
       state.currentPoll = action.payload;
-      // Update poll in current event too
       if (state.currentEvent) {
         const pollIndex = state.currentEvent.polls?.findIndex(p => p.id === action.payload.id);
         if (pollIndex !== undefined && pollIndex !== -1 && state.currentEvent.polls) {
@@ -83,7 +83,6 @@ const eventSlice = createSlice({
     },
     addQuestion: (state, action: PayloadAction<Question>) => {
       state.questions.unshift(action.payload);
-      // Add to current event too
       if (state.currentEvent) {
         if (!state.currentEvent.questions) {
           state.currentEvent.questions = [];
@@ -107,7 +106,23 @@ const eventSlice = createSlice({
       })
       .addCase(fetchEvents.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.events = action.payload;
+        
+        // ================== FIX IS HERE ==================
+        // The API might return the array directly or inside an object (e.g., { data: [...] }).
+        // This code safely checks if the payload is an array and assigns it.
+        // If not, it assumes the payload is an object and looks for an 'events' or 'data' property that holds the array.
+        if (Array.isArray(action.payload)) {
+          state.events = action.payload;
+        } else if (action.payload && Array.isArray((action.payload as any).events)) {
+          state.events = (action.payload as any).events;
+        } else if (action.payload && Array.isArray((action.payload as any).data)) {
+          state.events = (action.payload as any).data;
+        } else {
+            // If the format is unexpected, log an error and set events to an empty array to prevent crashes.
+            console.error("Received unexpected format for events:", action.payload);
+            state.events = [];
+        }
+        // ===================================================
       })
       .addCase(fetchEvents.rejected, (state, action) => {
         state.isLoading = false;
