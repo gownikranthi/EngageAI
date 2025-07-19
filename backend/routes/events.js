@@ -2,6 +2,8 @@ const express = require('express');
 const Event = require('../models/Event');
 const Participation = require('../models/Participation');
 const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
+const { eventValidation, handleValidationErrors } = require('../middleware/validation');
 
 const router = express.Router();
 
@@ -53,6 +55,33 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error while fetching event'
+    });
+  }
+});
+
+// POST /api/v1/events
+router.post('/', auth, admin, eventValidation, handleValidationErrors, async (req, res) => {
+  try {
+    const { name, description, startTime, endTime } = req.body;
+    const event = new Event({
+      name,
+      description,
+      startTime,
+      endTime,
+      createdBy: req.user._id
+    });
+    await event.save();
+    const populatedEvent = await Event.findById(event._id).populate('createdBy', 'name email');
+    res.status(201).json({
+      success: true,
+      message: 'Event created successfully',
+      data: populatedEvent
+    });
+  } catch (error) {
+    console.error('Create event error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while creating event'
     });
   }
 });
