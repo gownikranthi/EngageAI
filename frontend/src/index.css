@@ -1,0 +1,319 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* EngageAI Design System - Apple-inspired Swiss Design
+Philosophy: Clean minimalism with generous whitespace and premium typography
+All colors MUST be HSL format for consistency */
+
+@layer base {
+  :root {
+    /* Core Apple-inspired Palette */
+    --background: 0 0% 100%;                    /* Pure White #FFFFFF */
+    --background-subtle: 221 14% 97%;           /* Off-white #F5F5F7 */
+    --foreground: 220 9% 12%;                   /* Near-black #1D1D1F */
+    
+    /* Card and Surface Colors */
+    --card: 0 0% 100%;                          /* White cards */
+    --card-foreground: 220 9% 12%;              /* Near-black text */
+    --card-subtle: 221 14% 97%;                 /* Subtle card background */
+    
+    /* Popover Colors */
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 9% 12%;
+    
+    /* Electric Blue Accent - The star of the show */
+    --primary: 210 100% 50%;                    /* Electric Blue #007AFF */
+    --primary-foreground: 0 0% 100%;            /* White text on blue */
+    --primary-hover: 210 100% 45%;              /* Darker blue on hover */
+    --primary-light: 210 100% 95%;              /* Very light blue tint */
+    
+    /* Secondary Gray Tones */
+    --secondary: 221 14% 97%;                   /* Light gray background */
+    --secondary-foreground: 220 9% 12%;         /* Dark text */
+    
+    /* Muted/Subtle Elements */
+    --muted: 221 14% 97%;                       /* Same as secondary */
+    --muted-foreground: 220 9% 46%;             /* Medium gray text */
+    
+    /* Accent - Using the same electric blue */
+    --accent: 210 100% 50%;                     /* Electric blue */
+    --accent-foreground: 0 0% 100%;             /* White on blue */
+    
+    /* Destructive/Error States */
+    --destructive: 0 84% 60%;                   /* Red for errors */
+    --destructive-foreground: 0 0% 100%;        /* White text */
+    
+    /* Borders and Inputs */
+    --border: 220 13% 82%;                      /* Light Gray #D2D2D7 */
+    --border-subtle: 220 13% 91%;               /* Even lighter border */
+    --input: 0 0% 100%;                         /* White input background */
+    --input-border: 220 13% 82%;                /* Input border */
+    --ring: 210 100% 50%;                       /* Focus ring - electric blue */
+    
+    /* Border Radius - Apple's gentle curves */
+    --radius: 0.5rem;                           /* 8px rounded corners */
+    --radius-large: 1rem;                       /* 16px for cards */
+    --radius-small: 0.25rem;                    /* 4px for small elements */
+    
+    /* Typography Scale */
+    --font-size-xs: 0.75rem;                    /* 12px */
+    --font-size-sm: 0.875rem;                   /* 14px */
+    --font-size-base: 1.0625rem;                /* 17px - Apple's base */
+    --font-size-lg: 1.25rem;                    /* 20px */
+    --font-size-xl: 1.5rem;                     /* 24px */
+    --font-size-2xl: 2rem;                      /* 32px */
+    --font-size-3xl: 3rem;                      /* 48px - Hero text */
+    
+    /* Spacing Scale - Multiples of 8px */
+    --spacing-1: 0.5rem;                        /* 8px */
+    --spacing-2: 1rem;                          /* 16px */
+    --spacing-3: 1.5rem;                        /* 24px */
+    --spacing-4: 2rem;                          /* 32px */
+    --spacing-6: 3rem;                          /* 48px */
+    --spacing-8: 4rem;                          /* 64px */
+    
+    /* Shadows - Subtle and premium */
+    --shadow-sm: 0 1px 2px hsl(220 9% 12% / 0.05);
+    --shadow-md: 0 4px 6px hsl(220 9% 12% / 0.07);
+    --shadow-lg: 0 10px 15px hsl(220 9% 12% / 0.08);
+    --shadow-xl: 0 20px 25px hsl(220 9% 12% / 0.1);
+    
+    /* Transitions - Smooth and native-feeling */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Sidebar tokens */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Typography Utilities */
+  .text-hero {
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+  
+  .text-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+  
+  .text-subtitle {
+    font-size: var(--font-size-xl);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  
+  .text-body {
+    font-size: var(--font-size-base);
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  
+  .text-caption {
+    font-size: var(--font-size-sm);
+    font-weight: 400;
+    line-height: 1.4;
+  }
+}
+
+@layer components {
+  /* Button Variants */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground;
+    @apply px-6 py-3 rounded-lg font-medium;
+    @apply transition-all duration-200;
+    @apply hover:bg-[hsl(var(--primary-hover))] hover:shadow-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+    @apply active:scale-[0.98];
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground border border-border;
+    @apply px-6 py-3 rounded-lg font-medium;
+    @apply transition-all duration-200;
+    @apply hover:bg-[hsl(var(--border-subtle))] hover:shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+    @apply active:scale-[0.98];
+  }
+  
+  .btn-ghost {
+    @apply text-foreground;
+    @apply px-6 py-3 rounded-lg font-medium;
+    @apply transition-all duration-200;
+    @apply hover:bg-secondary hover:shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+    @apply active:scale-[0.98];
+  }
+  
+  /* Card Variants */
+  .card-primary {
+    @apply bg-card border border-border rounded-lg;
+    @apply shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .card-subtle {
+    @apply bg-[hsl(var(--card-subtle))] border border-[hsl(var(--border-subtle))] rounded-lg;
+    @apply shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  /* Input Styling */
+  .input-primary {
+    @apply bg-input border border-[hsl(var(--input-border))] rounded-lg;
+    @apply px-4 py-3 text-foreground placeholder-muted-foreground;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary;
+    @apply hover:border-primary;
+  }
+  
+  /* Container Max-widths */
+  .container-sm {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .container-md {
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .container-lg {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .container-xl {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+}
+
+@layer utilities {
+  /* Spacing utilities using our design tokens */
+  .space-1 { margin: var(--spacing-1); }
+  .space-2 { margin: var(--spacing-2); }
+  .space-3 { margin: var(--spacing-3); }
+  .space-4 { margin: var(--spacing-4); }
+  .space-6 { margin: var(--spacing-6); }
+  .space-8 { margin: var(--spacing-8); }
+  
+  /* Smooth scrolling for better UX */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out forwards;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
