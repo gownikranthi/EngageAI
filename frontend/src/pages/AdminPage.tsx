@@ -162,12 +162,11 @@ export const AdminPage: React.FC = () => {
               ) : events.length === 0 ? (
                 <option>No events available</option>
               ) : (
-                events.map((event) => (
-                  <option key={event.id} value={event.id}>
-                    {event.title}
-                  </option>
-                ))
-              )}
+                {Array.isArray(events) && events.map((event) => (
+                     <div key={event._id}>
+                    <p>{event.name}</p>
+                   </div>
+                ))}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           </div>
