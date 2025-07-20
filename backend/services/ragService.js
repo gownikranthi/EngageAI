@@ -58,32 +58,40 @@ async function ask(question) {
   if (!vectorStore) {
     return "I'm sorry, my knowledge base is not available at the moment. Please try again later.";
   }
+  if (!process.env.GEMINI_API_KEY) {
+    console.error("GEMINI_API_KEY is not set. Please add it to your environment variables.");
+    return "AI assistant is not available: missing API key. Please contact the administrator.";
+  }
+  try {
+    // Define the model and the prompt template
+    const llm = new ChatGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
+    const prompt = ChatPromptTemplate.fromTemplate(`
+      You are EngageAI Helper, a friendly assistant for event attendees. Answer the user's question based only on the following context about our events.
+      If the context doesn't contain the answer, say that you don't have that information.
 
-  // Define the model and the prompt template
-  const llm = new ChatGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
-  const prompt = ChatPromptTemplate.fromTemplate(`
-    You are EngageAI Helper, a friendly assistant for event attendees. Answer the user's question based only on the following context about our events.
-    If the context doesn't contain the answer, say that you don't have that information.
+      Context:
+      {context}
 
-    Context:
-    {context}
+      Question: {input}
 
-    Question: {input}
+      Answer:
+    `);
 
-    Answer:
-  `);
+    // Create the document chain and the retrieval chain
+    const documentChain = await createStuffDocumentsChain({ llm, prompt });
+    const retriever = vectorStore.asRetriever();
+    const retrievalChain = await createRetrievalChain({
+      combineDocsChain: documentChain,
+      retriever,
+    });
 
-  // Create the document chain and the retrieval chain
-  const documentChain = await createStuffDocumentsChain({ llm, prompt });
-  const retriever = vectorStore.asRetriever();
-  const retrievalChain = await createRetrievalChain({
-    combineDocsChain: documentChain,
-    retriever,
-  });
-
-  // Invoke the chain with the user's question
-  const result = await retrievalChain.invoke({ input: question });
-  return result.answer;
+    // Invoke the chain with the user's question
+    const result = await retrievalChain.invoke({ input: question });
+    return result.answer;
+  } catch (error) {
+    console.error('RAG Chatbot error:', error);
+    return "Sorry, I had trouble connecting to the AI service. Please try again later or contact support.";
+  }
 }
 
 module.exports = { initializeVectorStore, ask }; 
