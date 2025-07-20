@@ -1,29 +1,41 @@
 const express = require('express');
-const Participation = require('../models/Participation');
-const Event = require('../models/Event');
-const auth = require('../middleware/auth');
-const { getUserEventScore } = require('../utils/score'); // Assume you have a helper for this
-
 const router = express.Router();
+const auth = require('../middleware/auth');
+const Participation = require('../models/Participation');
+const { getUserEventScore } = require('../utils/score'); // Correctly import the new helper
 
 // GET /api/v1/profile/my-history
 router.get('/my-history', auth, async (req, res) => {
   try {
-    const participations = await Participation.find({ userId: req.user._id }).populate('eventId');
+    const userId = req.user.id;
+
+    // Find all events the user has participated in
+    const participations = await Participation.find({ userId }).populate('eventId', 'name startTime');
+
+    if (!participations) {
+      return res.json({ success: true, data: [] });
+    }
+
+    // For each participation, get the event details and calculate the score
     const history = await Promise.all(participations.map(async (p) => {
-      const event = p.eventId;
-      if (!event) return null;
-      // Use your existing scoring logic
-      const yourScore = await getUserEventScore(req.user._id, event._id);
+      if (!p.eventId) return null; // Skip if event was deleted
+
+      const score = await getUserEventScore(userId, p.eventId._id);
       return {
-        eventName: event.name,
-        eventDate: event.startTime,
-        yourScore,
+        eventName: p.eventId.name,
+        eventDate: p.eventId.startTime,
+        yourScore: score,
       };
     }));
-    res.json({ success: true, data: history.filter(Boolean) });
+
+    // Filter out any null results from deleted events
+    const validHistory = history.filter(item => item !== null);
+
+    res.json({ success: true, data: validHistory });
+
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to fetch profile history' });
+    console.error('Error fetching user history:', error);
+    res.status(500).json({ success: false, message: 'Server Error' });
   }
 });
 
