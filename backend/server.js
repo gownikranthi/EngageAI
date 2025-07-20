@@ -1,4 +1,4 @@
-require('dotenv-safe').config({ allowEmptyValues: false, example: './env.example.safe' });
+require('dotenv-safe').config({ allowEmptyValues: true, example: './env.example.safe' });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
