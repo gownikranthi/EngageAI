@@ -15,9 +15,10 @@ export const DashboardPage: React.FC = () => {
     dispatch(fetchEvents());
   }, [dispatch]);
 
-  const upcomingEvents = events.filter(event => new Date(event.startTime) > new Date());
-  const pastEvents = events.filter(event => new Date(event.startTime) <= new Date());
-  const attendedEvents = events.filter(event => event.participants?.includes(user?._id || ''));
+  // Defensive coding to handle undefined values
+  const upcomingEvents = events?.filter(event => new Date(event.startTime) > new Date()) || [];
+  const pastEvents = events?.filter(event => new Date(event.startTime) <= new Date()) || [];
+  const attendedEvents = events?.filter(event => event.participants?.includes(user?._id || '')) || [];
 
   const stats = [
     {
@@ -34,7 +35,7 @@ export const DashboardPage: React.FC = () => {
     },
     {
       label: 'Total Events',
-      value: events.length,
+      value: events?.length || 0,
       icon: Calendar,
       color: 'text-purple-500'
     },
@@ -87,7 +88,7 @@ export const DashboardPage: React.FC = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-hero text-foreground mb-2">
-            Welcome back, {user?.name?.split(' ')[0]}!
+            Welcome back, {user?.name?.split(' ')[0] || 'User'}!
           </h1>
           <p className="text-body text-muted-foreground">
             Discover and join engaging events in your community
@@ -157,7 +158,7 @@ export const DashboardPage: React.FC = () => {
         )}
 
         {/* Empty State */}
-        {events.length === 0 && (
+        {(!events || events.length === 0) && (
           <div className="text-center py-16">
             <Calendar className="w-24 h-24 text-muted-foreground/50 mx-auto mb-6" />
             <h2 className="text-title text-foreground mb-2">No events yet</h2>

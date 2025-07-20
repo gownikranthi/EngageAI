@@ -12,10 +12,11 @@ export interface RegisterData {
 }
 
 export interface User {
-  id: string;
+  _id: string; // Changed from id to _id for MongoDB consistency
   name: string;
   email: string;
   role: string;
+  engagementScore?: number; // Added optional engagement score
 }
 
 export interface AuthResponse {
