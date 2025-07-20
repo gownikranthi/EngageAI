@@ -14,6 +14,7 @@ import { EventDetailsPage } from './pages/EventDetailsPage';
 import { SessionPage } from './pages/SessionPage';
 import { AdminPage } from './pages/AdminPage';
 import NotFound from "./pages/NotFound";
+import { ThemeProvider } from "@/components/ui/sidebar";
 
 const queryClient = new QueryClient();
 
@@ -21,56 +22,55 @@ const App = () => (
   <ErrorBoundary>
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={<LoginPage />} />
-              
-              {/* Protected Routes */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/event/:eventId" 
-                element={
-                  <ProtectedRoute>
-                    <EventDetailsPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/session/:eventId" 
-                element={
-                  <ProtectedRoute>
-                    <SessionPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/admin" 
-                element={
-                  <ProtectedRoute adminOnly>
-                    <AdminPage />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Root redirect */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/login" element={<LoginPage />} />
+                {/* Protected Routes */}
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute>
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/event/:eventId" 
+                  element={
+                    <ProtectedRoute>
+                      <EventDetailsPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/session/:eventId" 
+                  element={
+                    <ProtectedRoute>
+                      <SessionPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute adminOnly>
+                      <AdminPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                {/* Root redirect */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </Provider>
   </ErrorBoundary>

@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const { eventValidation, handleValidationErrors } = require('../middleware/validation');
 const AuditLog = require('../models/AuditLog');
+const SocketHandler = require('../socket/socketHandler');
 
 const router = express.Router();
 
@@ -132,6 +133,19 @@ router.post('/', auth, admin, eventValidation, handleValidationErrors, async (re
       performedBy: req.user._id,
       details: { event: populatedEvent }
     });
+    // Emit real-time notification to all students
+    if (SocketHandler.io) {
+      SocketHandler.io.emit('new_event_created', {
+        eventId: event._id,
+        name: event.name,
+        createdAt: event.createdAt,
+        createdBy: {
+          _id: req.user._id,
+          name: req.user.name,
+          email: req.user.email
+        }
+      });
+    }
     return sendResponse(res, {
       success: true,
       message: 'Event created successfully',

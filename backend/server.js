@@ -20,6 +20,8 @@ const { swaggerUi, specs } = require('./swagger');
 const SocketHandler = require('./socket/socketHandler');
 const { generalLimiter, eventLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
 const sanitizeMiddleware = require('./middleware/sanitize');
+const { initializeVectorStore } = require('./services/ragService');
+const chatController = require('./controllers/chatController');
 
 // Initialize express app
 const app = express();
@@ -38,7 +40,10 @@ const io = new Server(server, {
 new SocketHandler(io);
 
 // Connect to database
-connectDB();
+connectDB().then(() => {
+  // Initialize the RAG service after the database is connected
+  initializeVectorStore();
+});
 
 // Middleware
 app.use(helmet());
@@ -69,6 +74,7 @@ app.use('/api/v1/engage', engagementRoutes);
 app.use('/api/v1/scores', scoreRoutes);
 app.use('/api/v1/admin', sensitiveLimiter, adminRoutes); // Sensitive limiter for admin actions
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.post('/api/v1/rag-chat', chatController.handleRagChat); // Add the new route
 
 // 404 handler
 app.use('*', (req, res) => {

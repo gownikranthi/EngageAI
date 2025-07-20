@@ -8,25 +8,35 @@
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["engageai", "backend", "api", "mern", "socket.io"],
+  "keywords": [
+    "engageai",
+    "backend",
+    "api",
+    "mern",
+    "socket.io"
+  ],
   "author": "EngageAI Team",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^7.5.0",
-    "jsonwebtoken": "^9.0.2",
+    "@langchain/community": "^0.3.49",
+    "@langchain/google-genai": "^0.2.15",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "dotenv-safe": "^8.2.0",
-    "helmet": "^7.0.0",
-    "express-validator": "^7.0.1",
-    "socket.io": "^4.7.2",
-    "express-rate-limit": "^6.10.0",
+    "express": "^4.18.2",
     "express-mongo-sanitize": "^2.2.0",
-    "xss-clean": "^0.1.1",
+    "express-rate-limit": "^6.10.0",
+    "express-validator": "^7.0.1",
+    "faiss-node": "^0.5.1",
+    "helmet": "^7.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "langchain": "^0.3.30",
+    "mongoose": "^7.5.0",
+    "socket.io": "^4.7.2",
+    "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
-    "swagger-jsdoc": "^6.2.8"
+    "xss-clean": "^0.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
@@ -34,4 +44,4 @@
   "engines": {
     "node": ">=18.0.0"
   }
-} 
+}

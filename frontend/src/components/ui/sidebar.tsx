@@ -2,6 +2,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
+import { Moon } from "lucide-react";
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -43,6 +44,38 @@ function useSidebar() {
   }
 
   return context
+}
+
+// Theme context for dark mode
+const ThemeContext = React.createContext({
+  theme: "light",
+  toggleTheme: () => {},
+});
+
+function useTheme() {
+  return React.useContext(ThemeContext);
+}
+
+function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("theme") || "light";
+    }
+    return "light";
+  });
+
+  React.useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === "light" ? "dark" : "light"));
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 const SidebarProvider = React.forwardRef<
@@ -352,14 +385,26 @@ const SidebarHeader = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => {
+  const { theme, toggleTheme } = useTheme();
   return (
     <div
       ref={ref}
       data-sidebar="header"
       className={cn("flex flex-col gap-2 p-2", className)}
       {...props}
-    />
-  )
+    >
+      <button
+        aria-label="Toggle dark mode"
+        onClick={toggleTheme}
+        className="mb-2 flex items-center gap-2 rounded p-2 hover:bg-sidebar-accent transition-colors"
+      >
+        <Moon className="w-5 h-5" />
+        <span className="text-xs font-medium">
+          {theme === "dark" ? "Dark" : "Light"} Mode
+        </span>
+      </button>
+    </div>
+  );
 })
 SidebarHeader.displayName = "SidebarHeader"
 
@@ -758,4 +803,6 @@ export {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
+  ThemeProvider,
+  useTheme,
 }

@@ -4,8 +4,10 @@ const Engagement = require('../models/Engagement');
 const User = require('../models/User');
 
 class SocketHandler {
+  static io = null;
   constructor(io) {
     this.io = io;
+    SocketHandler.io = io;
     this.setupSocketHandlers();
     this.startHeartbeat();
   }

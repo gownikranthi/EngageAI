@@ -4,16 +4,45 @@ import { fetchEvents } from '../redux/slices/eventSlice';
 import { Layout } from '../components/layout/Layout';
 import { EventCard } from '../components/events/EventCard';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Calendar, TrendingUp, Users, Award } from 'lucide-react';
+import { Calendar, TrendingUp, Users, Award, Bell } from 'lucide-react';
+import { useState } from 'react';
+import socketService from '../services/socket';
+import { useNavigate } from 'react-router-dom';
+import { RAGChatbot } from '../components/chatbot/RAGChatbot';
+import '../components/chatbot/RAGChatbot.css';
 
 export const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { events, isLoading, error } = useAppSelector((state) => state.event);
+  const [notifications, setNotifications] = useState<{id: string, message: string, read: boolean, createdAt: string, eventId?: string}[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(fetchEvents());
   }, [dispatch]);
+
+  useEffect(() => {
+    const socket = socketService.connect();
+    const handleNewEvent = (data: { eventId: string, name: string, createdAt: string }) => {
+      setNotifications((prev) => [
+        {
+          id: data.eventId,
+          message: `New event created: ${data.name}`,
+          read: false,
+          createdAt: data.createdAt,
+          eventId: data.eventId,
+        },
+        ...prev,
+      ]);
+    };
+    socket.on('new_event_created', handleNewEvent);
+    return () => {
+      socket.off('new_event_created', handleNewEvent);
+    };
+  }, []);
 
   // Defensive coding to handle undefined values
   const upcomingEvents = events?.filter(event => new Date(event.startTime) > new Date()) || [];
@@ -85,6 +114,55 @@ export const DashboardPage: React.FC = () => {
   return (
     <Layout>
       <div className="container-xl py-8">
+        {/* Notification Bell */}
+        <div className="fixed top-6 right-8 z-50">
+          <button
+            className="relative p-2 rounded-full hover:bg-accent transition-colors"
+            onClick={() => setShowDropdown((v) => !v)}
+            aria-label="Notifications"
+          >
+            <Bell className="w-6 h-6 text-foreground" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+          {showDropdown && (
+            <div className="absolute right-0 mt-2 w-80 bg-popover border border-border rounded-lg shadow-lg z-50">
+              <div className="p-4 border-b border-border font-semibold">Notifications</div>
+              <ul className="max-h-64 overflow-y-auto">
+                {notifications.length === 0 && (
+                  <li className="p-4 text-muted-foreground text-sm">No notifications yet.</li>
+                )}
+                {notifications.map((n) => (
+                  <li
+                    key={n.id}
+                    className={`p-4 border-b border-border last:border-b-0 ${n.read ? 'bg-background' : 'bg-accent/10'} cursor-pointer hover:bg-accent/20`}
+                    onClick={() => {
+                      setNotifications((prev) => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+                      if (n.eventId) navigate(`/event/${n.eventId}`);
+                      setShowDropdown(false);
+                    }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span>{n.message}</span>
+                      <span className="text-xs text-muted-foreground ml-2">{new Date(n.createdAt).toLocaleString()}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {notifications.length > 0 && (
+                <button
+                  className="w-full py-2 text-sm text-primary hover:underline"
+                  onClick={() => setNotifications(n => n.map(x => ({ ...x, read: true })))}
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+          )}
+        </div>
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-hero text-foreground mb-2">
@@ -168,6 +246,8 @@ export const DashboardPage: React.FC = () => {
           </div>
         )}
       </div>
+      {/* Add the chatbot at the end */}
+      <RAGChatbot />
     </Layout>
   );
 };
