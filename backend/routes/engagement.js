@@ -4,6 +4,29 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /engage/download:
+ *   post:
+ *     summary: Log a download engagement
+ *     description: Records a download engagement for a user and event.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               eventId:
+ *                 type: string
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Download engagement recorded
+ *       400:
+ *         description: Missing or invalid event ID
+ */
 // POST /api/v1/engage/download
 router.post('/download', auth, async (req, res) => {
   try {

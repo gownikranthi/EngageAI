@@ -6,6 +6,31 @@ const { registerValidation, loginValidation, handleValidationErrors } = require(
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     description: Creates a new user account.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered
+ *       400:
+ *         description: User already exists or validation error
+ */
 // POST /api/v1/auth/register
 router.post('/register', registerValidation, handleValidationErrors, async (req, res) => {
   try {
@@ -64,6 +89,29 @@ router.post('/register', registerValidation, handleValidationErrors, async (req,
   }
 });
 
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login a user
+ *     description: Authenticates a user and returns a JWT token.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Invalid credentials
+ */
 // POST /api/v1/auth/login
 router.post('/login', loginValidation, handleValidationErrors, async (req, res) => {
   try {

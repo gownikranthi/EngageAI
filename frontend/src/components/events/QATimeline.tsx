@@ -95,8 +95,8 @@ export const QATimeline: React.FC<QATimelineProps> = ({
             <p className="text-caption text-muted-foreground">Be the first to ask a question!</p>
           </div>
         ) : (
-          questions.map((question) => (
-            <div key={question.id} className="p-4 bg-card-subtle rounded-lg border border-border-subtle">
+          questions.map((question, idx) => (
+            <div key={question._id || question.id || idx} className="p-4 bg-card-subtle rounded-lg border border-border-subtle">
               {/* Question Content */}
               <p className="text-body text-foreground mb-3">
                 {question.text}

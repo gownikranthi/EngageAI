@@ -102,12 +102,12 @@ export const EventDetailsPage: React.FC = () => {
             <p className="text-body text-muted-foreground mb-4">
               {error || 'The event you\'re looking for doesn\'t exist or has been removed.'}
             </p>
-            <button 
+            <Button 
               onClick={() => navigate('/dashboard')}
-              className="btn-primary"
+              variant="default"
             >
               Back to Dashboard
-            </button>
+            </Button>
           </div>
         </div>
       </Layout>
@@ -123,12 +123,13 @@ export const EventDetailsPage: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-6">
-            <button
+            <Button
               onClick={() => navigate('/dashboard')}
-              className="btn-ghost p-2"
+              variant="ghost"
+              className="p-2"
             >
               <ArrowLeft className="w-5 h-5" />
-            </button>
+            </Button>
             <div className="flex-1">
               <h1 className="text-hero text-foreground">{currentEvent.name}</h1>
             </div>
@@ -217,6 +218,7 @@ export const EventDetailsPage: React.FC = () => {
               <Button 
                 onClick={handleJoinSession}
                 disabled={isJoining}
+                variant="default"
                 size="lg"
                 className="flex-1 h-12 text-lg"
               >

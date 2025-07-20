@@ -8,6 +8,27 @@ const admin = require('../middleware/admin');
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /admin/analytics/{eventId}:
+ *   get:
+ *     summary: Get analytics for an event
+ *     description: Admin only. Retrieves analytics data for a specific event.
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Event ID
+ *     responses:
+ *       200:
+ *         description: Analytics data
+ *       400:
+ *         description: Invalid event ID
+ *       404:
+ *         description: Event not found
+ */
 // GET /api/v1/admin/analytics/:eventId
 router.get('/analytics/:eventId', auth, admin, async (req, res) => {
   try {

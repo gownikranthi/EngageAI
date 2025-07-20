@@ -15,6 +15,7 @@ import { SessionPage } from './pages/SessionPage';
 import { AdminPage } from './pages/AdminPage';
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "@/components/ui/sidebar";
+import { EventRewindPage } from './pages/EventRewindPage';
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,14 @@ const App = () => (
                   element={
                     <ProtectedRoute adminOnly>
                       <AdminPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/event-rewind/:eventId" 
+                  element={
+                    <ProtectedRoute>
+                      <EventRewindPage />
                     </ProtectedRoute>
                   } 
                 />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { LoadingSpinner } from './ui/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
 
@@ -13,6 +13,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   adminOnly = false 
 }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
+  const location = useLocation();
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -31,7 +32,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" replace />;
   }
 
-  // Check admin access
+  // If admin tries to access /dashboard, redirect to /admin
+  if (user?.role === 'admin' && location.pathname.startsWith('/dashboard')) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  // If student tries to access /admin, redirect to /dashboard
+  if (user?.role !== 'admin' && location.pathname.startsWith('/admin')) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Check admin access for adminOnly routes
   if (adminOnly && user?.role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
   }

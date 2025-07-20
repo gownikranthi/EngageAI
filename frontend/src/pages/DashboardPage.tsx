@@ -10,6 +10,8 @@ import socketService from '../services/socket';
 import { useNavigate } from 'react-router-dom';
 import { RAGChatbot } from '../components/chatbot/RAGChatbot';
 import '../components/chatbot/RAGChatbot.css';
+import { Button } from '../components/ui/button';
+import { SkeletonCard } from '../components/ui/SkeletonCard';
 
 export const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -79,10 +81,11 @@ export const DashboardPage: React.FC = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-center">
-            <LoadingSpinner size="lg" className="mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading your dashboard...</p>
+        <div className="max-w-7xl mx-auto w-full p-4 sm:p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <SkeletonCard key={idx} />
+            ))}
           </div>
         </div>
       </Layout>
@@ -99,12 +102,9 @@ export const DashboardPage: React.FC = () => {
             </div>
             <h2 className="text-title text-foreground mb-2">Failed to load events</h2>
             <p className="text-body text-muted-foreground mb-4">{error}</p>
-            <button 
-              onClick={() => dispatch(fetchEvents())}
-              className="btn-primary"
-            >
+            <Button variant="default" onClick={() => dispatch(fetchEvents())}>
               Try Again
-            </button>
+            </Button>
           </div>
         </div>
       </Layout>
@@ -113,7 +113,7 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="container-xl py-8">
+      <div className="max-w-7xl mx-auto w-full p-4 sm:p-8">
         {/* Notification Bell */}
         <div className="fixed top-6 right-8 z-50">
           <button
@@ -153,12 +153,12 @@ export const DashboardPage: React.FC = () => {
                 ))}
               </ul>
               {notifications.length > 0 && (
-                <button
+                <Button
                   className="w-full py-2 text-sm text-primary hover:underline"
                   onClick={() => setNotifications(n => n.map(x => ({ ...x, read: true })))}
                 >
                   Mark all as read
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -193,7 +193,7 @@ export const DashboardPage: React.FC = () => {
         {/* Upcoming Events */}
         {upcomingEvents.length > 0 && (
           <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 gap-4">
               <h2 className="text-title text-foreground">Upcoming Events</h2>
               <span className="text-caption text-muted-foreground">
                 {upcomingEvents.length} event{upcomingEvents.length !== 1 ? 's' : ''}
@@ -212,7 +212,7 @@ export const DashboardPage: React.FC = () => {
         {/* Past Events */}
         {pastEvents.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 gap-4">
               <h2 className="text-title text-foreground">Past Events</h2>
               <span className="text-caption text-muted-foreground">
                 {pastEvents.length} event{pastEvents.length !== 1 ? 's' : ''}
@@ -227,9 +227,9 @@ export const DashboardPage: React.FC = () => {
             </div>
             {pastEvents.length > 6 && (
               <div className="text-center mt-6">
-                <button className="btn-secondary">
+                <Button className="btn-secondary">
                   View All Past Events
-                </button>
+                </Button>
               </div>
             )}
           </section>

@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { loginUser, registerUser, clearError } from '../redux/slices/authSlice';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Button } from '../components/ui/button';
 
 export const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -141,17 +142,17 @@ export const LoginPage: React.FC = () => {
             )}
 
             {/* Submit Button */}
-            <button
+            <Button variant="default"
               type="submit"
               disabled={isLoading}
-              className="btn-primary w-full flex items-center justify-center space-x-2"
+              className="w-full flex items-center justify-center space-x-2"
             >
               {isLoading ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
               )}
-            </button>
+            </Button>
           </form>
 
           {/* Switch Mode */}

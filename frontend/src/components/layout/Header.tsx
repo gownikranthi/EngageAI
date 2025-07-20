@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { RootState } from '../../redux/store';
 import { logout } from '../../redux/slices/authSlice';
-import { LogOut, User, Settings } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -19,57 +19,45 @@ export const Header: React.FC = () => {
 
   return (
     <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="container-xl">
+      <div className="max-w-7xl mx-auto w-full px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/dashboard" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+          {/* Left: Logo */}
+          <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-sm">EA</span>
             </div>
-            <span className="text-title text-foreground">EngageAI</span>
+            <span className="text-title text-foreground font-semibold text-lg">EngageAI</span>
           </Link>
 
-          {/* User Menu */}
-          <div className="flex items-center space-x-4">
+          {/* Right: User Info, Bell, Avatar */}
+          <div className="flex items-center gap-4">
             {/* User Info */}
-            <div className="flex items-center space-x-3">
-              <div className="text-right">
-                <p className="text-sm font-medium text-foreground">{user?.name}</p>
-                <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
-              </div>
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-primary" />
-              </div>
+            <div className="flex flex-col items-end">
+              <span className="text-sm font-medium text-foreground">{user?.name}</span>
+              <span className="text-xs text-muted-foreground capitalize">{user?.role}</span>
+              <Link to="/profile" className="text-xs text-primary underline mt-1">Profile</Link>
             </div>
-
+            {/* Bell icon placeholder (add notification bell here if needed) */}
+            {/* <Bell className="w-5 h-5 text-muted-foreground" /> */}
+            {/* Avatar */}
+            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-primary" />
+            </div>
             {/* Navigation */}
-            <nav className="flex items-center space-x-2">
-              <Link
-                to="/dashboard"
-                className="btn-ghost px-3 py-2 text-sm"
-              >
-                Dashboard
-              </Link>
+            <nav className="flex items-center gap-2">
+              <Link to="/dashboard" className="btn-ghost px-3 py-2 text-sm">Dashboard</Link>
               {user?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  className="btn-ghost px-3 py-2 text-sm"
-                >
-                  Admin
-                </Link>
+                <Link to="/admin" className="btn-ghost px-3 py-2 text-sm">Admin</Link>
               )}
             </nav>
-
-            {/* Actions */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleLogout}
-                className="btn-ghost p-2"
-                title="Logout"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="btn-ghost p-2"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>

@@ -18,6 +18,9 @@ import {
   Wifi,
   WifiOff 
 } from 'lucide-react';
+import { LivePoll } from '../components/student/LivePoll';
+import { QuestionSubmit } from '../components/student/QuestionSubmit';
+import { Button } from '../components/ui/button';
 
 export const SessionPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -120,12 +123,9 @@ export const SessionPage: React.FC = () => {
             <p className="text-body text-muted-foreground mb-4">
               {error || 'The event you\'re looking for doesn\'t exist or has been removed.'}
             </p>
-            <button 
-              onClick={() => navigate('/dashboard')}
-              className="btn-primary"
-            >
+            <Button variant="default" onClick={() => navigate('/dashboard')}>
               Back to Dashboard
-            </button>
+            </Button>
           </div>
         </div>
       </Layout>
@@ -134,27 +134,28 @@ export const SessionPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="container-xl py-8">
+      <div className="max-w-7xl mx-auto w-full p-4 sm:p-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-4">
-            <button
+          <div className="flex items-center gap-4 mb-4">
+            <Button
               onClick={() => navigate('/dashboard')}
-              className="btn-ghost p-2"
+              variant="ghost"
+              className="p-2"
             >
               <ArrowLeft className="w-5 h-5" />
-            </button>
+            </Button>
             <div className="flex-1">
               <h1 className="text-hero text-foreground">{currentEvent.name}</h1>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               {isConnected ? (
-                <div className="flex items-center space-x-2 text-primary">
+                <div className="flex items-center gap-2 text-primary">
                   <Wifi className="w-4 h-4" />
                   <span className="text-caption">Live</span>
                 </div>
               ) : (
-                <div className="flex items-center space-x-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <WifiOff className="w-4 h-4" />
                   <span className="text-caption">Disconnected</span>
                 </div>
@@ -190,7 +191,11 @@ export const SessionPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column */}
           <div className="space-y-8">
-            {/* Active Poll */}
+            {/* Live Poll */}
+            {currentEvent && <LivePoll eventId={currentEvent._id} />}
+            {/* Question Submit */}
+            {currentEvent && <QuestionSubmit eventId={currentEvent._id} />}
+            {/* Active Poll (legacy) */}
             {activePoll && (
               <PollCard
                 poll={activePoll}
@@ -198,14 +203,12 @@ export const SessionPage: React.FC = () => {
                 disabled={!hasJoined || !isConnected}
               />
             )}
-
             {/* Resources */}
             <ResourceCard
               resources={currentEvent.resources || []}
               eventId={currentEvent._id}
             />
           </div>
-
           {/* Right Column */}
           <div className="space-y-8">
             {/* Q&A Timeline */}
@@ -220,7 +223,7 @@ export const SessionPage: React.FC = () => {
         {/* Connection Status Banner */}
         {!isConnected && (
           <div className="fixed bottom-4 left-4 right-4 max-w-md mx-auto">
-            <div className="bg-destructive text-destructive-foreground p-4 rounded-lg shadow-lg flex items-center space-x-2">
+            <div className="bg-destructive text-destructive-foreground p-4 rounded-lg shadow-lg flex items-center gap-2">
               <WifiOff className="w-5 h-5" />
               <span className="text-sm">Connection lost. Trying to reconnect...</span>
             </div>

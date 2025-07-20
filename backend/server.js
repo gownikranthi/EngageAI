@@ -14,6 +14,9 @@ const eventRoutes = require('./routes/events');
 const engagementRoutes = require('./routes/engagement');
 const scoreRoutes = require('./routes/scores');
 const adminRoutes = require('./routes/admin');
+const pollRoutes = require('./routes/polls');
+const notificationRoutes = require('./routes/notifications');
+const profileRoutes = require('./routes/profile');
 const { swaggerUi, specs } = require('./swagger');
 
 // Import Socket.IO handler
@@ -73,6 +76,9 @@ app.use('/api/v1/events', eventLimiter, eventRoutes); // Moderate limiter for ev
 app.use('/api/v1/engage', engagementRoutes);
 app.use('/api/v1/scores', scoreRoutes);
 app.use('/api/v1/admin', sensitiveLimiter, adminRoutes); // Sensitive limiter for admin actions
+app.use('/api/v1/polls', pollRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/profile', profileRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.post('/api/v1/rag-chat', chatController.handleRagChat); // Add the new route
 

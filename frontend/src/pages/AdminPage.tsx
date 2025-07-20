@@ -21,6 +21,9 @@ import {
 } from '../components/ui/dialog';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
+import { PollManager } from '../components/admin/PollManager';
+import { AdminQAFeed } from '../components/admin/AdminQAFeed';
+import { Textarea } from '../components/ui/textarea';
 
 export const AdminPage: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -31,8 +34,9 @@ export const AdminPage: React.FC = () => {
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(true);
-  const [crudLoading, setCrudLoading] = useState<'create' | 'edit' | 'delete' | null>(null);
+  const [crudLoading, setCrudLoading] = useState<'create' | 'edit' | 'delete' | 'clone' | 'summary' | null>(null);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [currentEventDetails, setCurrentEventDetails] = useState<Event | null>(null);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -113,6 +117,20 @@ export const AdminPage: React.FC = () => {
     loadAnalytics();
   }, [selectedEventId, toast]);
 
+  // In the useEffect that loads analytics, also load full event details
+  useEffect(() => {
+    if (!selectedEventId) return;
+    const loadEventDetails = async () => {
+      try {
+        const eventDetails = await eventService.getEvent(selectedEventId);
+        setCurrentEventDetails(eventDetails);
+      } catch (error) {
+        setCurrentEventDetails(null);
+      }
+    };
+    loadEventDetails();
+  }, [selectedEventId]);
+
   // Helper to refresh events
   const refreshEvents = async (selectId?: string) => {
     setEventsLoading(true);
@@ -190,16 +208,21 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  // Handle delete
+  // Handle delete (optimistic UI)
   const handleDelete = async () => {
     setCrudLoading('delete');
     setErrorBanner(null);
+    const eventIdToDelete = selectedEventId;
+    const prevEvents = [...events];
+    setEvents((prev) => prev.filter(e => e._id !== eventIdToDelete));
+    setSelectedEventId(events.find(e => e._id !== eventIdToDelete)?._id || '');
+    setDeleteConfirmOpen(false);
     try {
-      await eventService.deleteEvent(selectedEventId);
+      await eventService.deleteEvent(eventIdToDelete);
       toast({ title: 'Success', description: 'Event deleted successfully!', variant: 'default' });
-      setDeleteConfirmOpen(false);
       await refreshEvents();
     } catch (error: unknown) {
+      setEvents(prevEvents); // revert
       let message = 'Failed to delete event.';
       if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response && error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
         message = (error.response.data as { message?: string }).message || message;
@@ -240,29 +263,29 @@ export const AdminPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="container-xl py-8">
+      <div className="max-w-7xl mx-auto w-full p-4 sm:p-8">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-hero text-foreground mb-2">Admin Dashboard</h1>
             <p className="text-body text-muted-foreground">
               Analyze event engagement and track user participation
             </p>
           </div>
-          <Button onClick={openCreateModal} className="ml-4">Create New Event</Button>
+          <Button onClick={openCreateModal} className="md:ml-4">Create New Event</Button>
         </div>
 
         {/* Error Banner */}
         {errorBanner && (
-          <div className="mb-4 p-3 rounded bg-red-100 text-red-800 flex items-center justify-between">
+          <div className="mb-4 p-3 rounded bg-red-100 text-red-800 flex items-center justify-between gap-4">
             <span>{errorBanner}</span>
             <button onClick={() => setErrorBanner(null)} className="ml-4 text-red-500 hover:underline">Dismiss</button>
           </div>
         )}
 
         {/* Event Selector */}
-        <div className="mb-8 flex items-center gap-4">
-          <div className="flex-1">
+        <div className="mb-8 flex flex-col md:flex-row items-center gap-4">
+          <div className="flex-1 w-full">
             <label htmlFor="event-select" className="block text-sm font-medium text-foreground mb-2">
               Select Event
             </label>
@@ -298,6 +321,43 @@ export const AdminPage: React.FC = () => {
           </div>
           <Button onClick={openEditModal} disabled={!selectedEventId || eventsLoading} variant="secondary">
             {crudLoading === 'edit' ? <LoadingSpinner size="sm" /> : 'Edit'}
+          </Button>
+          <Button
+            onClick={async () => {
+              if (!selectedEventId) return;
+              setCrudLoading('clone');
+              try {
+                await eventService.cloneEvent(selectedEventId);
+                toast({ title: 'Success', description: 'Event cloned successfully!', variant: 'default' });
+                await refreshEvents();
+              } catch (error) {
+                toast({ title: 'Error', description: 'Failed to clone event.', variant: 'destructive' });
+              } finally {
+                setCrudLoading(null);
+              }
+            }}
+            disabled={!selectedEventId || eventsLoading}
+            variant="outline"
+          >
+            {crudLoading === 'clone' ? <LoadingSpinner size="sm" /> : 'Clone'}
+          </Button>
+          <Button
+            onClick={async () => {
+              if (!selectedEventId) return;
+              setCrudLoading('summary');
+              try {
+                await eventService.generateSummary(selectedEventId);
+                toast({ title: 'Success', description: 'AI summary generated!', variant: 'default' });
+              } catch (error) {
+                toast({ title: 'Error', description: 'Failed to generate summary.', variant: 'destructive' });
+              } finally {
+                setCrudLoading(null);
+              }
+            }}
+            disabled={!selectedEventId || eventsLoading || (events.find(e => e._id === selectedEventId) && new Date(events.find(e => e._id === selectedEventId)!.startTime) > new Date())}
+            variant="outline"
+          >
+            {crudLoading === 'summary' ? <LoadingSpinner size="sm" /> : 'Generate AI Summary'}
           </Button>
           <Button onClick={() => setDeleteConfirmOpen(true)} disabled={!selectedEventId || eventsLoading} variant="destructive">
             {crudLoading === 'delete' ? <LoadingSpinner size="sm" /> : 'Delete'}
@@ -425,10 +485,11 @@ export const AdminPage: React.FC = () => {
             </DialogHeader>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
-                <label className="block mb-1 font-medium">Event Name</label>
+                <label htmlFor="event-name" className="block mb-1 font-medium">Event Name</label>
                 <input
                   type="text"
                   name="name"
+                  id="event-name"
                   value={form.name}
                   onChange={handleFormChange}
                   className="input-primary w-full"
@@ -436,21 +497,23 @@ export const AdminPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">Description</label>
-                <textarea
+                <label htmlFor="event-description" className="block mb-1 font-medium">Description</label>
+                <Textarea
                   name="description"
+                  id="event-description"
                   value={form.description}
                   onChange={handleFormChange}
-                  className="input-primary w-full"
+                  className="w-full"
                   rows={3}
                   required
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">Start Time</label>
+                <label htmlFor="event-start-time" className="block mb-1 font-medium">Start Time</label>
                 <input
                   type="datetime-local"
                   name="startTime"
+                  id="event-start-time"
                   value={form.startTime}
                   onChange={handleFormChange}
                   className="input-primary w-full"
@@ -458,10 +521,11 @@ export const AdminPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">End Time</label>
+                <label htmlFor="event-end-time" className="block mb-1 font-medium">End Time</label>
                 <input
                   type="datetime-local"
                   name="endTime"
+                  id="event-end-time"
                   value={form.endTime}
                   onChange={handleFormChange}
                   className="input-primary w-full"
@@ -503,6 +567,17 @@ export const AdminPage: React.FC = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Poll Manager */}
+        {currentEventDetails && (
+          <PollManager
+            event={currentEventDetails}
+            onPollsUpdate={(updatedEvent) => setCurrentEventDetails(updatedEvent)}
+          />
+        )}
+        {currentEventDetails && (
+          <AdminQAFeed initialQuestions={currentEventDetails.questions || []} />
+        )}
       </div>
     </Layout>
   );

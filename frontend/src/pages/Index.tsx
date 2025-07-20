@@ -1,5 +1,6 @@
 // Redirected to dashboard - this component is no longer used
 // All routing is now handled in App.tsx
+import { EventRewindPage } from './EventRewindPage';
 
 const Index = () => {
   return (

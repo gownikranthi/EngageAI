@@ -92,6 +92,15 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           )}
+          {/* View Rewind for past events */}
+          {!isUpcoming && (
+            <Link
+              to={`/event-rewind/${event._id}`}
+              className="btn-outline w-full flex items-center justify-center space-x-2 group"
+            >
+              <span>View Rewind</span>
+            </Link>
+          )}
         </div>
       </div>
     </div>

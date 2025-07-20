@@ -1,31 +1,27 @@
-const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
-const options = {
+const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
       title: 'EngageAI API',
       version: '1.0.0',
-      description: 'API documentation for EngageAI backend',
+      description: 'API documentation for EngageAI platform',
     },
     servers: [
-      { url: '/api/v1' }
+      {
+        url: '/api/v1',
+        description: 'Local server'
+      }
     ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
-    },
-    security: [{ bearerAuth: [] }],
   },
   apis: ['./routes/*.js'], // Path to the API docs
 };
 
-const specs = swaggerJsdoc(options);
+const specs = swaggerJsdoc(swaggerOptions);
 
-module.exports = { swaggerUi, specs }; 
+module.exports = {
+  swaggerUi,
+  specs,
+}; 

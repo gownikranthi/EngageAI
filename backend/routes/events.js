@@ -6,6 +6,10 @@ const admin = require('../middleware/admin');
 const { eventValidation, handleValidationErrors } = require('../middleware/validation');
 const AuditLog = require('../models/AuditLog');
 const SocketHandler = require('../socket/socketHandler');
+const { createNotification } = require('../utils/notification');
+const User = require('../models/User');
+const EventSummary = require('../models/EventSummary');
+const { generateEventSummary } = require('../services/aiScribeService');
 
 const router = express.Router();
 
@@ -17,6 +21,32 @@ function sendResponse(res, { success, message, data = null, errors = null, statu
   return res.status(status).json(response);
 }
 
+/**
+ * @swagger
+ * /events:
+ *   get:
+ *     summary: Retrieve a list of all events
+ *     description: Fetches all non-deleted events, supports pagination and search.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of events per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term for event name
+ *     responses:
+ *       200:
+ *         description: A list of events.
+ */
 // GET /api/v1/events
 router.get('/', async (req, res) => {
   try {
@@ -53,6 +83,25 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /events/{id}:
+ *   get:
+ *     summary: Get event by ID
+ *     description: Fetch a single event by its ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Event ID
+ *     responses:
+ *       200:
+ *         description: Event details
+ *       404:
+ *         description: Event not found
+ */
 // GET /api/v1/events/:id
 router.get('/:id', async (req, res) => {
   try {
@@ -89,6 +138,35 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /events:
+ *   post:
+ *     summary: Create a new event
+ *     description: Admin only. Creates a new event.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               startTime:
+ *                 type: string
+ *                 format: date-time
+ *               endTime:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       201:
+ *         description: Event created
+ *       400:
+ *         description: Validation error
+ */
 // POST /api/v1/events
 router.post('/', auth, admin, eventValidation, handleValidationErrors, async (req, res) => {
   try {
@@ -145,6 +223,11 @@ router.post('/', auth, admin, eventValidation, handleValidationErrors, async (re
           email: req.user.email
         }
       });
+    }
+    // Notify all users
+    const allUsers = await User.find({});
+    for (const u of allUsers) {
+      await createNotification(u._id, `A new event "${event.name}" has been created!`, `/events/${event._id}`, req.app.get('io'));
     }
     return sendResponse(res, {
       success: true,
@@ -292,9 +375,9 @@ router.post('/:id/join', auth, async (req, res) => {
 
     if (existingParticipation) {
       return sendResponse(res, {
-        success: false,
+        success: true,
         message: 'User is already participating in this event',
-        status: 400
+        data: existingParticipation
       });
     }
 
@@ -334,6 +417,53 @@ router.post('/:id/join', auth, async (req, res) => {
       message: 'Server error while joining event',
       status: 500
     });
+  }
+});
+
+// POST /api/v1/events/:id/clone
+router.post('/:id/clone', auth, admin, async (req, res) => {
+  try {
+    const original = await Event.findById(req.params.id);
+    if (!original) {
+      return sendResponse(res, { success: false, message: 'Original event not found', status: 404 });
+    }
+    const now = new Date();
+    const startTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const endTime = new Date(startTime.getTime() + (original.endTime - original.startTime));
+    const newEvent = new Event({
+      name: `Copy of ${original.name}`,
+      description: original.description,
+      startTime,
+      endTime,
+      createdBy: req.user._id,
+      polls: original.polls,
+      resources: original.resources,
+    });
+    await newEvent.save();
+    return sendResponse(res, { success: true, message: 'Event cloned successfully', data: newEvent, status: 201 });
+  } catch (error) {
+    return sendResponse(res, { success: false, message: 'Failed to clone event', status: 500 });
+  }
+});
+
+// POST /api/v1/events/:id/generate-summary (admin only)
+router.post('/:id/generate-summary', auth, admin, async (req, res) => {
+  try {
+    const summary = await generateEventSummary(req.params.id);
+    res.status(201).json({ success: true, data: summary });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to generate summary' });
+  }
+});
+
+// GET /api/v1/events/:id/summary (public)
+router.get('/:id/summary', async (req, res) => {
+  try {
+    const summary = await EventSummary.findOne({ eventId: req.params.id });
+    if (!summary) return res.status(404).json({ success: false, message: 'Summary not found' });
+    res.json({ success: true, data: summary });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch summary' });
   }
 });
 

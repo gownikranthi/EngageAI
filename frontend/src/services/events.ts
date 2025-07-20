@@ -22,17 +22,18 @@ export interface Event {
 export interface Poll {
   _id: string;
   question: string;
-  options: string[];
-  results?: { [option: string]: number };
-  isActive?: boolean;
+  options: { _id: string; text: string; votes: number }[];
+  isActive: boolean;
 }
 
 export interface Question {
-  _id:string;
+  _id: string;
   text: string;
   author: string;
-  timestamp: string;
-  votes?: number;
+  authorName: string;
+  isAnswered: boolean;
+  isApproved: boolean;
+  createdAt: string;
 }
 
 export interface Resource {
@@ -250,6 +251,36 @@ export const eventService = {
       return response.data;
     } catch (error) {
       console.error('❌ Error getting user score:', error);
+      throw error;
+    }
+  },
+
+  async createPoll(eventId: string, pollData: { question: string; options: string[] }): Promise<any> {
+    const response = await api.post(`/polls/${eventId}`, pollData);
+    return response.data;
+  },
+
+  async cloneEvent(eventId: string) {
+    const response = await api.post(`/events/${eventId}/clone`);
+    return response.data;
+  },
+
+  async generateSummary(eventId: string): Promise<any> {
+    try {
+      const response = await api.post(`/events/${eventId}/generate-summary`);
+      return response.data;
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      throw error;
+    }
+  },
+
+  async getSummary(eventId: string): Promise<any> {
+    try {
+      const response = await api.get(`/events/${eventId}/summary`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching summary:', error);
       throw error;
     }
   },
