@@ -57,18 +57,18 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onSubmit, disabled = f
       {/* Options */}
       <div className="space-y-3 mb-6">
         {poll.options.map((option, index) => {
-          const percentage = getPercentage(option);
-          const votes = poll.results?.[option] || 0;
-          const isSelected = selectedOption === option;
+          const percentage = totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0;
+          const votes = option.votes;
+          const isSelected = selectedOption === option._id;
           const showResults = hasVoted || !poll.isActive;
 
           return (
-            <div key={index} className="relative">
+            <div key={option._id} className="relative">
               <button
-                onClick={() => setSelectedOption(option)}
+                onClick={() => setSelectedOption(option._id)}
                 disabled={disabled || hasVoted || !poll.isActive}
-                className={`
-                  w-full p-4 rounded-lg border text-left transition-all duration-200
+                className={
+                  `w-full p-4 rounded-lg border text-left transition-all duration-200
                   ${isSelected 
                     ? 'border-primary bg-primary/5 text-foreground' 
                     : 'border-border hover:border-primary/50 text-foreground'
@@ -76,11 +76,11 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onSubmit, disabled = f
                   ${(disabled || hasVoted || !poll.isActive) 
                     ? 'cursor-not-allowed opacity-75' 
                     : 'cursor-pointer hover:shadow-sm'
-                  }
-                `}
+                  }`
+                }
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">{option}</span>
+                  <span className="font-medium">{option.text}</span>
                   {isSelected && !hasVoted && (
                     <Check className="w-5 h-5 text-primary" />
                   )}
