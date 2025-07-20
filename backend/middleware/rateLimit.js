@@ -10,7 +10,17 @@ const generalLimiter = rateLimit({
   }
 });
 
-// Stricter limiter for auth or sensitive endpoints: 10 requests per 10 minutes per IP
+// Moderate limiter for events: 50 requests per 10 minutes per IP
+const eventLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 50,
+  message: {
+    success: false,
+    message: 'Too many event requests from this IP, please try again later.'
+  }
+});
+
+// Stricter limiter for admin or sensitive endpoints: 10 requests per 10 minutes per IP
 const sensitiveLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 10,
@@ -20,4 +30,4 @@ const sensitiveLimiter = rateLimit({
   }
 });
 
-module.exports = { generalLimiter, sensitiveLimiter }; 
+module.exports = { generalLimiter, eventLimiter, sensitiveLimiter }; 

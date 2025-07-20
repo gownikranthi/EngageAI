@@ -18,7 +18,7 @@ const { swaggerUi, specs } = require('./swagger');
 
 // Import Socket.IO handler
 const SocketHandler = require('./socket/socketHandler');
-const { generalLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
+const { generalLimiter, eventLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
 const sanitizeMiddleware = require('./middleware/sanitize');
 
 // Initialize express app
@@ -64,10 +64,10 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/events', sensitiveLimiter, eventRoutes); // Sensitive limiter for event CRUD
+app.use('/api/v1/events', eventLimiter, eventRoutes); // Moderate limiter for events
 app.use('/api/v1/engage', engagementRoutes);
 app.use('/api/v1/scores', scoreRoutes);
-app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/admin', sensitiveLimiter, adminRoutes); // Sensitive limiter for admin actions
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // 404 handler
