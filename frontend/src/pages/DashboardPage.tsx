@@ -15,31 +15,32 @@ export const DashboardPage: React.FC = () => {
     dispatch(fetchEvents());
   }, [dispatch]);
 
-  const upcomingEvents = events.filter(event => new Date(event.date) > new Date());
-  const pastEvents = events.filter(event => new Date(event.date) <= new Date());
+  const upcomingEvents = events.filter(event => new Date(event.startTime) > new Date());
+  const pastEvents = events.filter(event => new Date(event.startTime) <= new Date());
+  const attendedEvents = events.filter(event => event.participants?.includes(user?._id || ''));
 
   const stats = [
     {
-      label: 'Total Events',
-      value: events.length,
-      icon: Calendar,
+      label: 'Events Attended',
+      value: attendedEvents.length,
+      icon: Users,
       color: 'text-blue-500'
     },
     {
-      label: 'Upcoming',
+      label: 'Upcoming Events',
       value: upcomingEvents.length,
       icon: TrendingUp,
       color: 'text-green-500'
     },
     {
-      label: 'Participated',
-      value: events.filter(e => e.participants?.includes(user?.id || '')).length,
-      icon: Users,
+      label: 'Total Events',
+      value: events.length,
+      icon: Calendar,
       color: 'text-purple-500'
     },
     {
-      label: 'Completed',
-      value: pastEvents.length,
+      label: 'Engagement Score',
+      value: user?.engagementScore || 0,
       icon: Award,
       color: 'text-yellow-500'
     },
@@ -121,7 +122,7 @@ export const DashboardPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {upcomingEvents.map((event, index) => (
-                <div key={event.id} className="animate-slide-up" style={{ animationDelay: `${index * 150}ms` }}>
+                <div key={event._id} className="animate-slide-up" style={{ animationDelay: `${index * 150}ms` }}>
                   <EventCard event={event} />
                 </div>
               ))}
@@ -140,7 +141,7 @@ export const DashboardPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {pastEvents.slice(0, 6).map((event, index) => (
-                <div key={event.id} className="opacity-75 hover:opacity-100 transition-opacity">
+                <div key={event._id} className="opacity-75 hover:opacity-100 transition-opacity">
                   <EventCard event={event} />
                 </div>
               ))}

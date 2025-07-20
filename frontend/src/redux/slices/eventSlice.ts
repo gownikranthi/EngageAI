@@ -19,14 +19,47 @@ const initialState: EventState = {
   error: null,
 };
 
-// Async thunks (No changes needed here)
+// Response type definitions
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
+
+interface EventsResponse {
+  events: Event[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
+// Async thunks
 export const fetchEvents = createAsyncThunk<Event[]>(
   'event/fetchEvents',
   async (_, { rejectWithValue }) => {
     try {
-      return await eventService.getAllEvents();
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch events');
+      const response = await eventService.getAllEvents();
+      // Handle different response formats
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response && typeof response === 'object' && 'data' in response) {
+        const data = (response as ApiResponse<EventsResponse>).data;
+        return data?.events || [];
+      } else {
+        return [];
+      }
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError.response?.data?.message || apiError.message || 'Failed to fetch events');
     }
   }
 );
@@ -35,9 +68,16 @@ export const fetchEvent = createAsyncThunk<Event, string>(
   'event/fetchEvent',
   async (eventId, { rejectWithValue }) => {
     try {
-      return await eventService.getEvent(eventId);
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch event');
+      const response = await eventService.getEvent(eventId);
+      // Handle different response formats
+      if (response && typeof response === 'object' && 'data' in response) {
+        const apiResponse = response as unknown as ApiResponse<Event>;
+        return apiResponse.data as Event;
+      }
+      return response as Event;
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError.response?.data?.message || apiError.message || 'Failed to fetch event');
     }
   }
 );
@@ -46,25 +86,25 @@ export const joinEvent = createAsyncThunk<{ message: string }, string>(
   'event/joinEvent',
   async (eventId, { rejectWithValue }) => {
     try {
-      return await eventService.joinEvent(eventId);
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to join event');
+      const response = await eventService.joinEvent(eventId);
+      return response;
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError.response?.data?.message || apiError.message || 'Failed to join event');
     }
   }
 );
 
-
 const eventSlice = createSlice({
   name: 'event',
   initialState,
-  // No changes needed in reducers
   reducers: {
     setCurrentEvent: (state, action: PayloadAction<Event>) => {
       state.currentEvent = action.payload;
     },
     updateCurrentEvent: (state, action: PayloadAction<Event>) => {
       state.currentEvent = action.payload;
-      const index = state.events.findIndex(e => e.id === action.payload.id);
+      const index = state.events.findIndex(e => e._id === action.payload._id);
       if (index !== -1) {
         state.events[index] = action.payload;
       }
@@ -75,7 +115,7 @@ const eventSlice = createSlice({
     updatePoll: (state, action: PayloadAction<Poll>) => {
       state.currentPoll = action.payload;
       if (state.currentEvent) {
-        const pollIndex = state.currentEvent.polls?.findIndex(p => p.id === action.payload.id);
+        const pollIndex = state.currentEvent.polls?.findIndex(p => p._id === action.payload._id);
         if (pollIndex !== undefined && pollIndex !== -1 && state.currentEvent.polls) {
           state.currentEvent.polls[pollIndex] = action.payload;
         }
@@ -106,23 +146,7 @@ const eventSlice = createSlice({
       })
       .addCase(fetchEvents.fulfilled, (state, action) => {
         state.isLoading = false;
-        
-        // ================== FIX IS HERE ==================
-        // The API might return the array directly or inside an object (e.g., { data: [...] }).
-        // This code safely checks if the payload is an array and assigns it.
-        // If not, it assumes the payload is an object and looks for an 'events' or 'data' property that holds the array.
-        if (Array.isArray(action.payload)) {
-          state.events = action.payload;
-        } else if (action.payload && Array.isArray((action.payload as any).events)) {
-          state.events = (action.payload as any).events;
-        } else if (action.payload && Array.isArray((action.payload as any).data)) {
-          state.events = (action.payload as any).data;
-        } else {
-            // If the format is unexpected, log an error and set events to an empty array to prevent crashes.
-            console.error("Received unexpected format for events:", action.payload);
-            state.events = [];
-        }
-        // ===================================================
+        state.events = action.payload;
       })
       .addCase(fetchEvents.rejected, (state, action) => {
         state.isLoading = false;

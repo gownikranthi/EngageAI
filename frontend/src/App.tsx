@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { EventDetailsPage } from './pages/EventDetailsPage';
 import { SessionPage } from './pages/SessionPage';
 import { AdminPage } from './pages/AdminPage';
 import NotFound from "./pages/NotFound";
@@ -34,6 +35,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <DashboardPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/event/:eventId" 
+                element={
+                  <ProtectedRoute>
+                    <EventDetailsPage />
                   </ProtectedRoute>
                 } 
               />

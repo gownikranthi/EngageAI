@@ -53,6 +53,7 @@ export const SessionPage: React.FC = () => {
         });
       } catch (error) {
         console.error('Failed to join event:', error);
+        // Don't show error toast for auto-join failures
       }
     };
 
@@ -64,7 +65,7 @@ export const SessionPage: React.FC = () => {
 
   const handlePollSubmit = (answer: string) => {
     if (currentPoll) {
-      submitPoll(currentPoll.id, answer);
+      submitPoll(currentPoll._id, answer);
       toast({
         title: "Vote submitted",
         description: "Your response has been recorded!",
@@ -144,7 +145,7 @@ export const SessionPage: React.FC = () => {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex-1">
-              <h1 className="text-hero text-foreground">{currentEvent.title}</h1>
+              <h1 className="text-hero text-foreground">{currentEvent.name}</h1>
             </div>
             <div className="flex items-center space-x-2">
               {isConnected ? (
@@ -165,7 +166,7 @@ export const SessionPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="flex items-center space-x-2 text-body text-muted-foreground">
               <Calendar className="w-4 h-4 text-primary" />
-              <span>{formatDate(currentEvent.date)}</span>
+              <span>{formatDate(currentEvent.startTime)}</span>
             </div>
             {currentEvent.location && (
               <div className="flex items-center space-x-2 text-body text-muted-foreground">
@@ -201,7 +202,7 @@ export const SessionPage: React.FC = () => {
             {/* Resources */}
             <ResourceCard
               resources={currentEvent.resources || []}
-              eventId={currentEvent.id}
+              eventId={currentEvent._id}
             />
           </div>
 
