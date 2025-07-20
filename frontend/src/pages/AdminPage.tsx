@@ -12,7 +12,13 @@ import {
 import {
   BarChart3, Users, Download, MessageSquare, Award, ChevronDown,
 } from 'lucide-react';
-import { Dialog } from '../components/ui/dialog';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '../components/ui/dialog';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 
@@ -221,17 +227,16 @@ export const AdminPage: React.FC = () => {
 
   // Data preparation for charts
   const engagementData = analytics ? [
-    { name: 'Polls', value: analytics.engagementBreakdown.polls || 0, color: '#007AFF' },
-    { name: 'Questions', value: analytics.engagementBreakdown.questions || 0, color: '#34C759' },
-    { name: 'Downloads', value: analytics.engagementBreakdown.downloads || 0, color: '#FF9500' },
-    { name: 'Time Spent', value: analytics.engagementBreakdown.timeSpent || 0, color: '#AF52DE' },
+    { name: 'Polls', value: analytics.engagementBreakdown?.polls || 0, color: '#007AFF' },
+    { name: 'Questions', value: analytics.engagementBreakdown?.questions || 0, color: '#34C759' },
+    { name: 'Downloads', value: analytics.engagementBreakdown?.downloads || 0, color: '#FF9500' },
+    { name: 'Time Spent', value: analytics.engagementBreakdown?.timeSpent || 0, color: '#AF52DE' },
   ] : [];
 
-  const topUsersData = analytics?.topUsers.map(user => ({
+  const topUsersData = analytics?.topUsers?.map(user => ({
     name: user.name,
     score: user.score,
   })) || [];
-
 
   return (
     <Layout>
@@ -246,6 +251,7 @@ export const AdminPage: React.FC = () => {
           </div>
           <Button onClick={openCreateModal} className="ml-4">Create New Event</Button>
         </div>
+
         {/* Error Banner */}
         {errorBanner && (
           <div className="mb-4 p-3 rounded bg-red-100 text-red-800 flex items-center justify-between">
@@ -253,6 +259,7 @@ export const AdminPage: React.FC = () => {
             <button onClick={() => setErrorBanner(null)} className="ml-4 text-red-500 hover:underline">Dismiss</button>
           </div>
         )}
+
         {/* Event Selector */}
         <div className="mb-8 flex items-center gap-4">
           <div className="flex-1">
@@ -310,121 +317,191 @@ export const AdminPage: React.FC = () => {
         {/* Analytics Content */}
         {analytics && !isLoading && (
           <div className="space-y-8">
-            {/* ... rest of your analytics JSX ... */}
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-               {/* Cards */}
-             </div>
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="card-primary p-6">
-                  <h3 className="text-subtitle text-foreground mb-6">Engagement Breakdown</h3>
-                   <div className="h-80">
-                     <ResponsiveContainer width="100%" height="100%">
-                       <PieChart>
-                         <Pie data={engagementData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
-                           {engagementData.map((entry, index) => (
-                             <Cell key={`cell-${index}`} fill={entry.color} />
-                           ))}
-                         </Pie>
-                         <Tooltip />
-                       </PieChart>
-                     </ResponsiveContainer>
-                   </div>
-                 </div>
-                 <div className="card-primary p-6">
-                  <h3 className="text-subtitle text-foreground mb-6">Top Users by Score</h3>
-                   <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={topUsersData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="score" fill="#007AFF" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                   </div>
-                 </div>
-             </div>
+            {/* Analytics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="card-primary p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Participants</p>
+                    <p className="text-2xl font-bold text-foreground">{analytics.totalParticipants || 0}</p>
+                  </div>
+                  <Users className="w-8 h-8 text-primary" />
+                </div>
+              </div>
+              
+              <div className="card-primary p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Downloads</p>
+                    <p className="text-2xl font-bold text-foreground">{analytics.totalDownloads || 0}</p>
+                  </div>
+                  <Download className="w-8 h-8 text-primary" />
+                </div>
+              </div>
+              
+              <div className="card-primary p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Questions Asked</p>
+                    <p className="text-2xl font-bold text-foreground">{analytics.totalQuestions || 0}</p>
+                  </div>
+                  <MessageSquare className="w-8 h-8 text-primary" />
+                </div>
+              </div>
+              
+              <div className="card-primary p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Avg Score</p>
+                    <p className="text-2xl font-bold text-foreground">{analytics.averageScore?.toFixed(1) || '0.0'}</p>
+                  </div>
+                  <Award className="w-8 h-8 text-primary" />
+                </div>
+              </div>
+            </div>
+
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="card-primary p-6">
+                <h3 className="text-subtitle text-foreground mb-6">Engagement Breakdown</h3>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie 
+                        data={engagementData} 
+                        cx="50%" 
+                        cy="50%" 
+                        innerRadius={60} 
+                        outerRadius={100} 
+                        paddingAngle={5} 
+                        dataKey="value"
+                      >
+                        {engagementData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              
+              <div className="card-primary p-6">
+                <h3 className="text-subtitle text-foreground mb-6">Top Users by Score</h3>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={topUsersData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="score" fill="#007AFF" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
         {/* No Data State */}
         {!analytics && !isLoading && selectedEventId && (
-            <div className="text-center py-16">
-              <BarChart3 className="w-24 h-24 text-muted-foreground/50 mx-auto mb-6" />
-              <h2 className="text-title text-foreground mb-2">No Analytics Data</h2>
-              <p className="text-body text-muted-foreground max-w-md mx-auto">
-                Analytics data for this event will appear here once users start engaging.
-              </p>
-            </div>
+          <div className="text-center py-16">
+            <BarChart3 className="w-24 h-24 text-muted-foreground/50 mx-auto mb-6" />
+            <h2 className="text-title text-foreground mb-2">No Analytics Data</h2>
+            <p className="text-body text-muted-foreground max-w-md mx-auto">
+              Analytics data for this event will appear here once users start engaging.
+            </p>
+          </div>
         )}
+
         {/* Create/Edit Modal */}
         <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-          <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
-            <h2 className="text-lg font-semibold mb-2">{modalMode === 'create' ? 'Create New Event' : 'Edit Event'}</h2>
-            <div>
-              <label className="block mb-1 font-medium">Event Name</label>
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleFormChange}
-                className="input-primary w-full"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Description</label>
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleFormChange}
-                className="input-primary w-full"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Start Time</label>
-              <input
-                type="datetime-local"
-                name="startTime"
-                value={form.startTime}
-                onChange={handleFormChange}
-                className="input-primary w-full"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">End Time</label>
-              <input
-                type="datetime-local"
-                name="endTime"
-                value={form.endTime}
-                onChange={handleFormChange}
-                className="input-primary w-full"
-                required
-              />
-            </div>
-            <div className="flex justify-end gap-2 mt-4">
-              <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={crudLoading === 'create' || crudLoading === 'edit'}>
-                {crudLoading === 'create' || crudLoading === 'edit' ? <LoadingSpinner size="sm" /> : (modalMode === 'create' ? 'Create' : 'Save Changes')}
-              </Button>
-            </div>
-          </form>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {modalMode === 'create' ? 'Create New Event' : 'Edit Event'}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleFormSubmit} className="space-y-4">
+              <div>
+                <label className="block mb-1 font-medium">Event Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleFormChange}
+                  className="input-primary w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Description</label>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleFormChange}
+                  className="input-primary w-full"
+                  rows={3}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Start Time</label>
+                <input
+                  type="datetime-local"
+                  name="startTime"
+                  value={form.startTime}
+                  onChange={handleFormChange}
+                  className="input-primary w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">End Time</label>
+                <input
+                  type="datetime-local"
+                  name="endTime"
+                  value={form.endTime}
+                  onChange={handleFormChange}
+                  className="input-primary w-full"
+                  required
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={crudLoading === 'create' || crudLoading === 'edit'}>
+                  {crudLoading === 'create' || crudLoading === 'edit' ? (
+                    <LoadingSpinner size="sm" />
+                  ) : (
+                    modalMode === 'create' ? 'Create' : 'Save Changes'
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
         </Dialog>
+
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-          <div className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Delete Event</h2>
-            <p>Are you sure you want to delete this event? This action cannot be undone.</p>
-            <div className="flex justify-end gap-2 mt-6">
-              <Button type="button" variant="secondary" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Event</DialogTitle>
+            </DialogHeader>
+            <p className="text-muted-foreground">
+              Are you sure you want to delete this event? This action cannot be undone.
+            </p>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => setDeleteConfirmOpen(false)}>
+                Cancel
+              </Button>
               <Button type="button" variant="destructive" onClick={handleDelete} disabled={crudLoading === 'delete'}>
                 {crudLoading === 'delete' ? <LoadingSpinner size="sm" /> : 'Delete'}
               </Button>
-            </div>
-          </div>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
       </div>
     </Layout>
