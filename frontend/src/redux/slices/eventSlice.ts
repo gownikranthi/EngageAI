@@ -19,20 +19,6 @@ const initialState: EventState = {
   error: null,
 };
 
-// Response type definitions
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data?: T;
-}
-
-interface EventsResponse {
-  events: Event[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
 interface ApiError {
   response?: {
     data?: {
@@ -47,16 +33,7 @@ export const fetchEvents = createAsyncThunk<Event[]>(
   'event/fetchEvents',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await eventService.getAllEvents();
-      // Handle different response formats
-      if (Array.isArray(response)) {
-        return response;
-      } else if (response && typeof response === 'object' && 'data' in response) {
-        const data = (response as ApiResponse<EventsResponse>).data;
-        return data?.events || [];
-      } else {
-        return [];
-      }
+      return await eventService.getAllEvents();
     } catch (error: unknown) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message || 'Failed to fetch events');
@@ -68,13 +45,7 @@ export const fetchEvent = createAsyncThunk<Event, string>(
   'event/fetchEvent',
   async (eventId, { rejectWithValue }) => {
     try {
-      const response = await eventService.getEvent(eventId);
-      // Handle different response formats
-      if (response && typeof response === 'object' && 'data' in response) {
-        const apiResponse = response as unknown as ApiResponse<Event>;
-        return apiResponse.data as Event;
-      }
-      return response as Event;
+      return await eventService.getEvent(eventId);
     } catch (error: unknown) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message || 'Failed to fetch event');
@@ -86,8 +57,7 @@ export const joinEvent = createAsyncThunk<{ message: string }, string>(
   'event/joinEvent',
   async (eventId, { rejectWithValue }) => {
     try {
-      const response = await eventService.joinEvent(eventId);
-      return response;
+      return await eventService.joinEvent(eventId);
     } catch (error: unknown) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.response?.data?.message || apiError.message || 'Failed to join event');
