@@ -284,4 +284,14 @@ export const eventService = {
       throw error;
     }
   },
+
+  async addResource(eventId: string, resource: { fileName: string; fileUrl: string; description?: string }): Promise<Event> {
+    const response = await api.post(`/events/${eventId}/resources`, resource);
+    return response.data;
+  },
+
+  async deleteResource(eventId: string, resourceId: string): Promise<Event> {
+    const response = await api.delete(`/events/${eventId}/resources/${resourceId}`);
+    return response.data;
+  },
 };

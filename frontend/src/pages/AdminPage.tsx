@@ -24,6 +24,7 @@ import { Skeleton } from '../components/ui/skeleton';
 import { PollManager } from '../components/admin/PollManager';
 import { AdminQAFeed } from '../components/admin/AdminQAFeed';
 import { Textarea } from '../components/ui/textarea';
+import { AdminResourceManager } from '../components/admin/AdminResourceManager';
 
 export const AdminPage: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -575,6 +576,15 @@ export const AdminPage: React.FC = () => {
             onPollsUpdate={(updatedEvent) => setCurrentEventDetails(updatedEvent)}
           />
         )}
+        {/* Admin Resource Manager */}
+        {currentEventDetails && (
+          <AdminResourceManager
+            resources={currentEventDetails.resources || []}
+            eventId={currentEventDetails._id}
+            onResourcesUpdate={(resources) => setCurrentEventDetails({ ...currentEventDetails, resources })}
+          />
+        )}
+        {/* Admin Q&A Feed */}
         {currentEventDetails && (
           <AdminQAFeed initialQuestions={currentEventDetails.questions || []} />
         )}

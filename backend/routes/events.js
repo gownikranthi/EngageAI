@@ -467,4 +467,42 @@ router.get('/:id/summary', async (req, res) => {
   }
 });
 
+// Add resource to event
+router.post('/:eventId/resources', auth, admin, async (req, res) => {
+  try {
+    const { fileName, fileUrl, description } = req.body;
+    if (!fileName || !fileUrl) {
+      return sendResponse(res, { success: false, message: 'File name and URL are required.', status: 400 });
+    }
+    const event = await Event.findById(req.params.eventId);
+    if (!event) {
+      return sendResponse(res, { success: false, message: 'Event not found', status: 404 });
+    }
+    const newResource = { fileName, fileUrl, description };
+    event.resources = event.resources || [];
+    event.resources.push(newResource);
+    await event.save();
+    return sendResponse(res, { success: true, message: 'Resource added', data: event });
+  } catch (error) {
+    console.error('Add resource error:', error);
+    return sendResponse(res, { success: false, message: 'Failed to add resource', status: 500 });
+  }
+});
+
+// Delete resource from event
+router.delete('/:eventId/resources/:resourceId', auth, admin, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.eventId);
+    if (!event) {
+      return sendResponse(res, { success: false, message: 'Event not found', status: 404 });
+    }
+    event.resources = (event.resources || []).filter(r => r._id.toString() !== req.params.resourceId);
+    await event.save();
+    return sendResponse(res, { success: true, message: 'Resource deleted', data: event });
+  } catch (error) {
+    console.error('Delete resource error:', error);
+    return sendResponse(res, { success: false, message: 'Failed to delete resource', status: 500 });
+  }
+});
+
 module.exports = router;
