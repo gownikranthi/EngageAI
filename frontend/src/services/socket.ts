@@ -34,8 +34,10 @@ class SocketService {
         if (error.message === 'Authentication error') {
           const freshToken = localStorage.getItem('engageai_token');
           if (freshToken && freshToken !== token) {
-            this.socket?.auth = { token: freshToken };
-            this.socket?.connect();
+            // Disconnect current socket and create new one with fresh token
+            this.socket?.disconnect();
+            this.socket = null;
+            this.connect();
           }
         }
       });
