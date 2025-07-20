@@ -19,7 +19,7 @@ function sendResponse(res, { success, message, data = null, errors = null, statu
 // GET /api/v1/events
 router.get('/', async (req, res) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
+    const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string;
     const filter = { isDeleted: false };
