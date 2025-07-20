@@ -20,18 +20,23 @@ function sendResponse(res, { success, message, data = null, errors = null, statu
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const search = req.query.search as string;
+    // FIX #1: Removed 'as string' TypeScript syntax
+    const limit = parseInt(req.query.limit) || 10; 
+    // FIX #2: Removed 'as string' TypeScript syntax
+    const search = req.query.search; 
+
     const filter = { isDeleted: false };
     if (search) {
       filter.name = { $regex: search, $options: 'i' };
     }
+
     const total = await Event.countDocuments(filter);
     const events = await Event.find(filter)
       .populate('createdBy', 'name email')
       .sort({ startTime: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
+
     return sendResponse(res, {
       success: true,
       message: 'Events fetched successfully',
@@ -130,7 +135,8 @@ router.post('/', auth, admin, eventValidation, handleValidationErrors, async (re
     return sendResponse(res, {
       success: true,
       message: 'Event created successfully',
-      data: populatedEvent
+      data: populatedEvent,
+      status: 201 // Use 201 for resource creation
     });
   } catch (error) {
     console.error('Create event error:', error);
@@ -317,4 +323,4 @@ router.post('/:id/join', auth, async (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;
