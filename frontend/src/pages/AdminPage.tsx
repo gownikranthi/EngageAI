@@ -25,7 +25,7 @@ import { PollManager } from '../components/admin/PollManager';
 import { AdminQAFeed } from '../components/admin/AdminQAFeed';
 import { Textarea } from '../components/ui/textarea';
 import { AdminResourceManager } from '../components/admin/AdminResourceManager';
-import { Tabs } from '../components/ui/Tabs';
+import { Tabs } from '../components/ui/tabs';
 
 export const AdminPage: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);

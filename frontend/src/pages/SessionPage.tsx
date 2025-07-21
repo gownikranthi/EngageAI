@@ -21,6 +21,7 @@ import {
 import { LivePoll } from '../components/student/LivePoll';
 import { QuestionSubmit } from '../components/student/QuestionSubmit';
 import { Button } from '../components/ui/button';
+import { Tabs } from '../components/ui/tabs';
 
 export const SessionPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -135,100 +136,35 @@ export const SessionPage: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto w-full p-4 sm:p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button
-              onClick={() => navigate('/dashboard')}
-              variant="ghost"
-              className="p-2"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex-1">
-              <h1 className="text-hero text-foreground">{currentEvent.name}</h1>
-            </div>
-            <div className="flex items-center gap-2">
-              {isConnected ? (
-                <div className="flex items-center gap-2 text-primary">
-                  <Wifi className="w-4 h-4" />
-                  <span className="text-caption">Live</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <WifiOff className="w-4 h-4" />
-                  <span className="text-caption">Disconnected</span>
-                </div>
-              )}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main Content Column */}
+          <div className="lg:w-2/3 space-y-8">
+            <h1 className="text-hero text-foreground mb-2">{currentEvent.name}</h1>
+            <p className="text-body text-muted-foreground mb-6">{currentEvent.description}</p>
+            <div className="aspect-video bg-black rounded-lg mb-8 flex items-center justify-center text-white text-lg font-bold">
+              Video Player Placeholder
             </div>
           </div>
-
-          {/* Event Details */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="flex items-center space-x-2 text-body text-muted-foreground">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span>{formatDate(currentEvent.startTime)}</span>
-            </div>
-            {currentEvent.location && (
-              <div className="flex items-center space-x-2 text-body text-muted-foreground">
-                <MapPin className="w-4 h-4 text-primary" />
-                <span>{currentEvent.location}</span>
-              </div>
-            )}
-            <div className="flex items-center space-x-2 text-body text-muted-foreground">
-              <Users className="w-4 h-4 text-primary" />
-              <span>{currentEvent.participants?.length || 0} participants</span>
-            </div>
-          </div>
-
-          {/* Description */}
-          <p className="text-body text-muted-foreground max-w-3xl">
-            {currentEvent.description}
-          </p>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column */}
-          <div className="space-y-8">
-            {/* Live Poll */}
-            {currentEvent && <LivePoll eventId={currentEvent._id} />}
-            {/* Question Submit */}
-            {currentEvent && <QuestionSubmit eventId={currentEvent._id} />}
-            {/* Active Poll (legacy) */}
-            {activePoll && (
-              <PollCard
-                poll={activePoll}
-                onSubmit={handlePollSubmit}
-                disabled={!hasJoined || !isConnected}
-              />
-            )}
-            {/* Resources */}
-            <ResourceCard
-              resources={currentEvent.resources || []}
-              eventId={currentEvent._id}
-            />
-          </div>
-          {/* Right Column */}
-          <div className="space-y-8">
-            {/* Q&A Timeline */}
-            <QATimeline
-              questions={questions}
-              onSubmitQuestion={handleQuestionSubmit}
-              disabled={!hasJoined || !isConnected}
+          {/* Interactive Sidebar */}
+          <div className="lg:w-1/3">
+            <Tabs
+              tabs={[
+                {
+                  label: 'Live Poll',
+                  content: currentEvent ? <LivePoll eventId={currentEvent._id} /> : null,
+                },
+                {
+                  label: 'Q&A',
+                  content: currentEvent ? <QuestionSubmit eventId={currentEvent._id} /> : null,
+                },
+                {
+                  label: 'Resources',
+                  content: currentEvent ? <ResourceCard resources={currentEvent.resources || []} eventId={currentEvent._id} /> : null,
+                },
+              ]}
             />
           </div>
         </div>
-
-        {/* Connection Status Banner */}
-        {!isConnected && (
-          <div className="fixed bottom-4 left-4 right-4 max-w-md mx-auto">
-            <div className="bg-destructive text-destructive-foreground p-4 rounded-lg shadow-lg flex items-center gap-2">
-              <WifiOff className="w-5 h-5" />
-              <span className="text-sm">Connection lost. Trying to reconnect...</span>
-            </div>
-          </div>
-        )}
       </div>
     </Layout>
   );
