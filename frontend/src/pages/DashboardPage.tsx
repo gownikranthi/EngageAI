@@ -95,10 +95,12 @@ export const DashboardPage: React.FC = () => {
     return (
       <Layout>
         <div className="max-w-7xl mx-auto w-full p-4 sm:p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 8 }).map((_, idx) => (
-              <SkeletonCard key={idx} />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, index) => <SkeletonCard key={index} />)
+              : upcomingEvents.map((event, index) => (
+                  <EventCard key={event._id} event={event} />
+                ))}
           </div>
         </div>
       </Layout>

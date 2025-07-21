@@ -243,28 +243,27 @@ export const AdminPage: React.FC = () => {
   };
 
   // Handle delete (optimistic UI)
-  const handleDelete = async () => {
-    setCrudLoading('delete');
-    setErrorBanner(null);
-    const eventIdToDelete = selectedEventId;
-    const prevEvents = [...events];
-    setEvents((prev) => prev.filter(e => e._id !== eventIdToDelete));
-    setSelectedEventId(events.find(e => e._id !== eventIdToDelete)?._id || '');
-    setDeleteConfirmOpen(false);
+  const handleDelete = async (eventId: string) => {
+    const originalEvents = events;
+    // Optimistically update the UI
+    setEvents(currentEvents => currentEvents.filter(event => event._id !== eventId));
+
     try {
-      await eventService.deleteEvent(eventIdToDelete);
-      toast({ title: 'Success', description: 'Event deleted successfully!', variant: 'default' });
-      await refreshEvents();
-    } catch (error: unknown) {
-      setEvents(prevEvents); // revert
-      let message = 'Failed to delete event.';
-      if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response && error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
-        message = (error.response.data as { message?: string }).message || message;
-      }
-      setErrorBanner(message);
-      toast({ title: 'Error', description: message, variant: 'destructive' });
-    } finally {
-      setCrudLoading(null);
+      await eventService.deleteEvent(eventId);
+      toast({
+        title: "Success",
+        description: "Event deleted successfully.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+      // Revert the UI on failure
+      setEvents(originalEvents);
+      toast({
+        title: "Error",
+        description: "Failed to delete the event. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -677,7 +676,7 @@ export const AdminPage: React.FC = () => {
               <Button type="button" variant="secondary" onClick={() => setDeleteConfirmOpen(false)}>
                 Cancel
               </Button>
-              <Button type="button" variant="destructive" onClick={handleDelete} disabled={crudLoading === 'delete'}>
+              <Button type="button" variant="destructive" onClick={() => handleDelete(selectedEventId)} disabled={crudLoading === 'delete'}>
                 {crudLoading === 'delete' ? <LoadingSpinner size="sm" /> : 'Delete'}
               </Button>
             </DialogFooter>

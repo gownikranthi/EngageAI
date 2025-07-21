@@ -11,7 +11,36 @@ const { getUserEventScore } = require('../utils/score');
 // Protect all routes in this file for admins
 router.use(auth, admin);
 
-// GET /api/v1/admin/analytics/:id - Get full analytics for a specific event
+/**
+ * @swagger
+ * /api/v1/admin/analytics/{id}:
+ *   get:
+ *     summary: Get full analytics for a specific event
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The event ID
+ *     responses:
+ *       200:
+ *         description: Event analytics data fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server Error
+ */
 router.get('/analytics/:id', async (req, res) => {
   try {
     const eventId = req.params.id;
@@ -48,7 +77,31 @@ router.get('/analytics/:id', async (req, res) => {
   }
 });
 
-// GET /api/v1/admin/users - Get all users
+/**
+ * @swagger
+ * /api/v1/admin/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         description: Server Error
+ */
 router.get('/users', async (req, res) => {
   try {
     const users = await User.find().select('-password');
@@ -59,7 +112,38 @@ router.get('/users', async (req, res) => {
   }
 });
 
-// GET /api/v1/admin/events/:id/participants - Get participants for an event
+/**
+ * @swagger
+ * /api/v1/admin/events/{id}/participants:
+ *   get:
+ *     summary: Get participants for a specific event
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The event ID
+ *     responses:
+ *       200:
+ *         description: A list of event participants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         description: Server Error
+ */
 router.get('/events/:id/participants', async (req, res) => {
   try {
     const participations = await Participation.find({ eventId: req.params.id })

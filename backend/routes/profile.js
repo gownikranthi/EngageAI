@@ -3,9 +3,23 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Participation = require('../models/Participation');
 const { getUserEventScore } = require('../utils/score'); // Correctly import the new helper
+const Event = require('../models/Event');
 
-// GET /api/v1/profile/my-history
-router.get('/my-history', auth, async (req, res) => {
+/**
+ * @swagger
+ * /api/v1/profile/event-history:
+ *   get:
+ *     summary: Get the event history for the logged-in user
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of events the user has participated in.
+ *       500:
+ *         description: Server Error
+ */
+router.get('/event-history', auth, async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -35,6 +49,46 @@ router.get('/my-history', auth, async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching user history:', error);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/v1/profile/score/{eventId}:
+ *   get:
+ *     summary: Get the user's score for a specific event
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The event ID
+ *     responses:
+ *       200:
+ *         description: The user's engagement score for the event.
+ *       500:
+ *         description: Server Error
+ */
+router.get('/score/:eventId', auth, async (req, res) => {
+  try {
+    const eventId = req.params.eventId;
+    const userId = req.user.id;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+
+    const score = await getUserEventScore(userId, eventId);
+    res.json({ success: true, data: { eventName: event.name, yourScore: score } });
+
+  } catch (error) {
+    console.error('Error fetching user score:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 });

@@ -8,16 +8,20 @@ const router = express.Router();
 
 /**
  * @swagger
- * /auth/register:
+ * /api/v1/auth/register:
  *   post:
  *     summary: Register a new user
- *     description: Creates a new user account.
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
  *             properties:
  *               name:
  *                 type: string
@@ -27,9 +31,11 @@ const router = express.Router();
  *                 type: string
  *     responses:
  *       201:
- *         description: User registered
+ *         description: User registered successfully
  *       400:
- *         description: User already exists or validation error
+ *         description: Bad request or user already exists
+ *       500:
+ *         description: Server Error
  */
 // POST /api/v1/auth/register
 router.post('/register', registerValidation, handleValidationErrors, async (req, res) => {
@@ -91,16 +97,19 @@ router.post('/register', registerValidation, handleValidationErrors, async (req,
 
 /**
  * @swagger
- * /auth/login:
+ * /api/v1/auth/login:
  *   post:
- *     summary: Login a user
- *     description: Authenticates a user and returns a JWT token.
+ *     summary: Log in a user
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - password
  *             properties:
  *               email:
  *                 type: string
@@ -108,9 +117,11 @@ router.post('/register', registerValidation, handleValidationErrors, async (req,
  *                 type: string
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Login successful, returns JWT token
  *       400:
  *         description: Invalid credentials
+ *       500:
+ *         description: Server Error
  */
 // POST /api/v1/auth/login
 router.post('/login', loginValidation, handleValidationErrors, async (req, res) => {
@@ -162,6 +173,35 @@ router.post('/login', loginValidation, handleValidationErrors, async (req, res) 
     res.status(500).json({
       success: false,
       message: 'Server error during login'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/v1/auth/me:
+ *   get:
+ *     summary: Get current user's profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile data
+ *       401:
+ *         description: Not authorized
+ *       500:
+ *         description: Server Error
+ */
+router.get('/me', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching user'
     });
   }
 });

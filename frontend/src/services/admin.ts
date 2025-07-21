@@ -1,34 +1,22 @@
 import api from './api';
 
 export interface AdminAnalytics {
-  event: {
-    _id: string;
+  totalParticipants: number;
+  engagementBreakdown: {
+    polls: number;
+    questions: number;
+    downloads: number;
+  };
+  topUsers: {
+    id: string;
     name: string;
-    description: string;
-    startTime: string;
-    endTime: string;
-  };
-  participation: {
-    totalParticipants: number;
-    activeParticipants: number;
-    averageSessionDuration: number;
-  };
-  engagement: {
-    totalPolls: number;
-    totalQA: number;
-    totalDownloads: number;
-    totalEngagements: number;
-  };
-  topParticipants: Array<{
-    user: {
-      name: string;
-      email: string;
-    };
-    engagementCount: number;
-    sessionDuration: number;
-    joinTime: string;
-  }>;
+    email: string;
+    score: number;
+  }[];
+  timelineData: any[];
 }
+
+const API_URL = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/v1/admin`;
 
 export const adminService = {
   async getEventAnalytics(eventId: string): Promise<AdminAnalytics> {

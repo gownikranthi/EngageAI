@@ -7,23 +7,28 @@ const { check, validationResult } = require('express-validator');
 
 /**
  * @swagger
- * /polls/{eventId}:
+ * /api/v1/polls/{eventId}:
  *   post:
  *     summary: Create a new poll for an event
- *     description: Admin only. Creates a new poll for the specified event.
+ *     tags: [Polls]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: eventId
  *         required: true
  *         schema:
  *           type: string
- *         description: Event ID
+ *         description: The ID of the event to add the poll to
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - question
+ *               - options
  *             properties:
  *               question:
  *                 type: string
@@ -33,9 +38,13 @@ const { check, validationResult } = require('express-validator');
  *                   type: string
  *     responses:
  *       201:
- *         description: Poll created
+ *         description: Poll created successfully
  *       400:
- *         description: Validation error or event not found
+ *         description: Bad request or validation error
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Server Error
  */
 // POST /api/v1/polls/:eventId - Create a new poll for an event
 router.post(

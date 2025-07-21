@@ -13,6 +13,7 @@ const { generateEventSummary } = require('../services/aiScribeService');
 const { getUserEventScore } = require('../utils/score');
 
 const router = express.Router();
+const { check, validationResult } = require('express-validator');
 
 // Helper for consistent API responses
 function sendResponse(res, { success, message, data = null, errors = null, status = 200 }) {
@@ -24,29 +25,19 @@ function sendResponse(res, { success, message, data = null, errors = null, statu
 
 /**
  * @swagger
- * /events:
+ * /api/v1/events:
  *   get:
  *     summary: Retrieve a list of all events
- *     description: Fetches all non-deleted events, supports pagination and search.
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *         description: Page number
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Number of events per page
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *         description: Search term for event name
+ *     tags: [Events]
  *     responses:
  *       200:
  *         description: A list of events.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Event'
  */
 // GET /api/v1/events
 router.get('/', async (req, res) => {
@@ -86,20 +77,24 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /events/{id}:
+ * /api/v1/events/{id}:
  *   get:
- *     summary: Get event by ID
- *     description: Fetch a single event by its ID.
+ *     summary: Retrieve a single event by ID
+ *     tags: [Events]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Event ID
+ *         description: The event ID
  *     responses:
  *       200:
- *         description: Event details
+ *         description: A single event.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Event'
  *       404:
  *         description: Event not found
  */
@@ -141,35 +136,32 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /events:
+ * /api/v1/events:
  *   post:
  *     summary: Create a new event
- *     description: Admin only. Creates a new event.
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *               startTime:
- *                 type: string
- *                 format: date-time
- *               endTime:
- *                 type: string
- *                 format: date-time
+ *             $ref: '#/components/schemas/Event'
  *     responses:
  *       201:
- *         description: Event created
+ *         description: Event created successfully
  *       400:
- *         description: Validation error
+ *         description: Bad request
  */
 // POST /api/v1/events
-router.post('/', auth, admin, eventValidation, handleValidationErrors, async (req, res) => {
+router.post(
+  '/',
+  auth,
+  admin,
+  eventValidation,
+  handleValidationErrors,
+  async (req, res) => {
   try {
     const { name, description, startTime, endTime } = req.body;
     // Check for duplicate name (case-insensitive, not deleted)
@@ -246,6 +238,33 @@ router.post('/', auth, admin, eventValidation, handleValidationErrors, async (re
   }
 });
 
+// PUT /api/v1/events/:id - Update an event
+/**
+ * @swagger
+ * /api/v1/events/{id}:
+ *   put:
+ *     summary: Update an existing event
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Event'
+ *     responses:
+ *       200:
+ *         description: Event updated successfully
+ *       404:
+ *         description: Event not found
+ */
 // PUT /api/v1/events/:id
 router.put('/:id', auth, admin, eventValidation, handleValidationErrors, async (req, res) => {
   try {
@@ -314,6 +333,27 @@ router.put('/:id', auth, admin, eventValidation, handleValidationErrors, async (
   }
 });
 
+// DELETE /api/v1/events/:id - Delete an event
+/**
+ * @swagger
+ * /api/v1/events/{id}:
+ *   delete:
+ *     summary: Delete an event
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Event deleted successfully
+ *       404:
+ *         description: Event not found
+ */
 // DELETE /api/v1/events/:id
 router.delete('/:id', auth, admin, async (req, res) => {
   try {
@@ -352,6 +392,27 @@ router.delete('/:id', auth, admin, async (req, res) => {
   }
 });
 
+// POST /api/v1/events/:id/join - Join an event
+/**
+ * @swagger
+ * /api/v1/events/{id}/join:
+ *   post:
+ *     summary: Join an event
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully joined event
+ *       404:
+ *         description: Event not found
+ */
 // POST /api/v1/events/:id/join
 router.post('/:id/join', auth, async (req, res) => {
   try {
@@ -428,6 +489,27 @@ router.post('/:id/join', auth, async (req, res) => {
   }
 });
 
+// POST /api/v1/events/:id/clone - Clone an event
+/**
+ * @swagger
+ * /api/v1/events/{id}/clone:
+ *   post:
+ *     summary: Clone an event
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Event cloned successfully
+ *       404:
+ *         description: Event not found
+ */
 // POST /api/v1/events/:id/clone
 router.post('/:id/clone', auth, admin, async (req, res) => {
   try {

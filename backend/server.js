@@ -25,6 +25,7 @@ const { generalLimiter, adminLimiter, eventLimiter, sensitiveLimiter } = require
 const sanitizeMiddleware = require('./middleware/sanitize');
 const { initializeVectorStore } = require('./services/ragService');
 const chatController = require('./controllers/chatController');
+const mongoSanitize = require('express-mongo-sanitize');
 
 // Initialize express app
 const app = express();
@@ -75,6 +76,7 @@ app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(mongoSanitize());
 app.use(sanitizeMiddleware);
 
 // Apply general rate limiter globally
