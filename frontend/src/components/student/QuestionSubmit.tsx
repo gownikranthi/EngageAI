@@ -20,12 +20,11 @@ export const QuestionSubmit: React.FC<QuestionSubmitProps> = ({ eventId }) => {
     e.preventDefault();
     if (question.trim() && socket && user) {
       setIsSubmitting(true);
-      socket.emit('submitQuestion', {
+      socket.emit('question:submit', {
         eventId,
-        userId: user._id,
-        text: question,
+        questionText: question,
+        user: { id: user._id, name: user.name },
       }, () => {
-        // This callback runs when the server acknowledges the event
         setQuestion('');
         setIsSubmitting(false);
         toast({

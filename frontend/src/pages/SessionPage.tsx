@@ -37,7 +37,7 @@ export const SessionPage: React.FC = () => {
 
         // Join the event room via socket
         if (socket && user) {
-          socket.emit('joinEvent', { eventId, userId: user._id });
+          socket.emit('session:join', eventId);
         }
       } catch (err: any) {
         setError(err.message || 'Failed to load event details.');
