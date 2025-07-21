@@ -1,23 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { fetchEvent, joinEvent } from '../redux/slices/eventSlice';
-import { useSocket } from '../hooks/useSocket';
+import { useAppSelector } from '../redux/hooks';
 import { Layout } from '../components/layout/Layout';
-import { PollCard } from '../components/events/PollCard';
-import { QATimeline } from '../components/events/QATimeline';
-import { ResourceCard } from '../components/events/ResourceCard';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { useToast } from '../hooks/use-toast';
-import { 
-  Calendar, 
-  MapPin, 
-  Users, 
-  Clock, 
-  ArrowLeft,
-  Wifi,
-  WifiOff 
-} from 'lucide-react';
+import { eventService, Event } from '../services/events';
+import { useSocket } from '../hooks/useSocket';
 import { LivePoll } from '../components/student/LivePoll';
 import { QuestionSubmit } from '../components/student/QuestionSubmit';
 import { Button } from '../components/ui/button';
@@ -26,143 +13,156 @@ import { Tabs } from '../components/ui/tabs';
 export const SessionPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { toast } = useToast();
+  const { user, token } = useAppSelector(state => state.auth);
+  const socket = useSocket(token);
 
-  const { currentEvent, currentPoll, questions, isLoading, error } = useAppSelector(
-    (state) => state.event
-  );
-  const { user } = useAppSelector((state) => state.auth);
-
-  const [hasJoined, setHasJoined] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-
-  // Initialize socket connection
-  const { submitPoll, submitQuestion } = useSocket(eventId);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // States for interactive components
+  const [activePoll, setActivePoll] = useState<any>(null);
 
   useEffect(() => {
-    if (!eventId) return;
+    if (!eventId) {
+      setError("No event ID provided.");
+      setIsLoading(false);
+      return;
+    }
 
-    // Fetch event data
-    dispatch(fetchEvent(eventId));
-
-    // Auto-join event
-    const autoJoin = async () => {
+    const fetchEventDetails = async () => {
       try {
-        await dispatch(joinEvent(eventId));
-        setHasJoined(true);
-        toast({
-          title: "Joined event",
-          description: "You're now connected to the live session!",
-        });
-      } catch (error) {
-        console.error('Failed to join event:', error);
-        // Don't show error toast for auto-join failures
+        const eventData = await eventService.getEvent(eventId);
+        setEvent(eventData);
+
+        // Join the event room via socket
+        if (socket && user) {
+          socket.emit('joinEvent', { eventId, userId: user._id });
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to load event details.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    autoJoin();
+    fetchEventDetails();
 
-    // Simulate connection status (in real app, this would come from socket)
-    setIsConnected(true);
-  }, [eventId, dispatch, toast]);
+  }, [eventId, socket, user]);
 
-  const handlePollSubmit = (answer: string) => {
-    if (currentPoll) {
-      submitPoll(currentPoll._id, answer);
-      toast({
-        title: "Vote submitted",
-        description: "Your response has been recorded!",
-      });
-    }
-  };
+  useEffect(() => {
+    if (!socket) return;
 
-  const handleQuestionSubmit = (question: string) => {
-    submitQuestion(question);
-    toast({
-      title: "Question submitted",
-      description: "Your question has been added to the timeline!",
-    });
-  };
+    // Listen for new polls being launched
+    const handlePollLaunch = (poll: any) => {
+      setActivePoll(poll);
+    };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+    socket.on('pollLaunched', handlePollLaunch);
 
-  const activePoll = currentEvent?.polls?.find(poll => poll.isActive) || currentPoll;
+    return () => {
+      socket.off('pollLaunched', handlePollLaunch);
+    };
+  }, [socket]);
+
 
   if (isLoading) {
     return (
       <Layout>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-center">
-            <LoadingSpinner size="lg" className="mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading event session...</p>
-          </div>
+        <div className="flex justify-center items-center h-screen">
+          <LoadingSpinner size="lg" />
         </div>
       </Layout>
     );
   }
 
-  if (error || !currentEvent) {
+  if (error) {
     return (
       <Layout>
-        <div className="container-xl py-8">
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-destructive/10 rounded-full flex items-center justify-center">
-              <Calendar className="w-8 h-8 text-destructive" />
-            </div>
-            <h2 className="text-title text-foreground mb-2">Event not found</h2>
-            <p className="text-body text-muted-foreground mb-4">
-              {error || 'The event you\'re looking for doesn\'t exist or has been removed.'}
-            </p>
-            <Button variant="default" onClick={() => navigate('/dashboard')}>
-              Back to Dashboard
-            </Button>
-          </div>
+        <div className="text-center py-10">
+          <p className="text-red-500">{error}</p>
+          <Button onClick={() => navigate('/dashboard')} className="mt-4">
+            Back to Dashboard
+          </Button>
         </div>
       </Layout>
     );
   }
+
+  if (!event) {
+    return (
+      <Layout>
+        <div className="text-center py-10">
+          <p>Event not found.</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  const handleVote = (optionId: string) => {
+    if (socket && activePoll) {
+      socket.emit('votePoll', { pollId: activePoll._id, optionId });
+      // Optionally, show a "voted" state locally
+    }
+  };
+
+  const interactiveTabs = [
+    {
+      label: 'Live Poll',
+      content: activePoll ? (
+        <LivePoll poll={activePoll} onVote={handleVote} />
+      ) : (
+        <div className="text-center text-muted-foreground py-8">
+          No active poll at the moment.
+        </div>
+      ),
+    },
+    {
+      label: 'Q&A',
+      content: <QuestionSubmit eventId={event._id} />,
+    },
+    {
+      label: 'Resources',
+      content: (
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg">Event Resources</h3>
+          {event.resources && event.resources.length > 0 ? (
+            <ul className="list-disc pl-5">
+              {event.resources.map(resource => (
+                <li key={resource._id}>
+                  <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    {resource.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted-foreground">No resources available for this event.</p>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto w-full p-4 sm:p-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Main Content Column */}
-          <div className="lg:w-2/3 space-y-8">
-            <h1 className="text-hero text-foreground mb-2">{currentEvent.name}</h1>
-            <p className="text-body text-muted-foreground mb-6">{currentEvent.description}</p>
-            <div className="aspect-video bg-black rounded-lg mb-8 flex items-center justify-center text-white text-lg font-bold">
-              Video Player Placeholder
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground">{event.name}</h1>
+          <p className="text-muted-foreground">{event.description}</p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content Area */}
+          <div className="lg:col-span-2 bg-muted rounded-lg p-8 flex items-center justify-center min-h-[400px]">
+            <p className="text-muted-foreground text-lg">Main presentation area</p>
           </div>
+          
           {/* Interactive Sidebar */}
-          <div className="lg:w-1/3">
-            <Tabs
-              tabs={[
-                {
-                  label: 'Live Poll',
-                  content: currentEvent ? <LivePoll eventId={currentEvent._id} /> : null,
-                },
-                {
-                  label: 'Q&A',
-                  content: currentEvent ? <QuestionSubmit eventId={currentEvent._id} /> : null,
-                },
-                {
-                  label: 'Resources',
-                  content: currentEvent ? <ResourceCard resources={currentEvent.resources || []} eventId={currentEvent._id} /> : null,
-                },
-              ]}
-            />
+          <div className="lg:col-span-1">
+            <div className="bg-card p-4 rounded-lg shadow-sm">
+              <Tabs tabs={interactiveTabs} />
+            </div>
           </div>
         </div>
       </div>
