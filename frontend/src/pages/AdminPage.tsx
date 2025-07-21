@@ -263,16 +263,16 @@ export const AdminPage: React.FC = () => {
 
   // Data preparation for charts
   const engagementData = analytics ? [
-    { name: 'Polls', value: analytics.engagementBreakdown?.polls || 0, color: '#007AFF' },
-    { name: 'Questions', value: analytics.engagementBreakdown?.questions || 0, color: '#34C759' },
-    { name: 'Downloads', value: analytics.engagementBreakdown?.downloads || 0, color: '#FF9500' },
-    { name: 'Time Spent', value: analytics.engagementBreakdown?.timeSpent || 0, color: '#AF52DE' },
+    { name: 'Polls', value: engagementBreakdown.polls || engagementBreakdown.totalPolls || 0, color: '#007AFF' },
+    { name: 'Questions', value: engagementBreakdown.questions || engagementBreakdown.totalQA || 0, color: '#34C759' },
+    { name: 'Downloads', value: engagementBreakdown.downloads || engagementBreakdown.totalDownloads || 0, color: '#FF9500' },
+    { name: 'Time Spent', value: engagementBreakdown.timeSpent || 0, color: '#AF52DE' },
   ] : [];
 
-  const topUsersData = analytics?.topUsers?.map(user => ({
-    name: user.name,
-    score: user.score,
-  })) || [];
+  const topUsersData = (topUsers || []).map(user => ({
+    name: user.name || user.user?.name || 'User',
+    score: user.score ?? user.engagementCount ?? 0,
+  }));
 
   return (
     <Layout>
