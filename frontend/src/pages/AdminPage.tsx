@@ -25,6 +25,7 @@ import { PollManager } from '../components/admin/PollManager';
 import { AdminQAFeed } from '../components/admin/AdminQAFeed';
 import { Textarea } from '../components/ui/textarea';
 import { AdminResourceManager } from '../components/admin/AdminResourceManager';
+import { Tabs } from '../components/ui/Tabs';
 
 export const AdminPage: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -38,6 +39,11 @@ export const AdminPage: React.FC = () => {
   const [crudLoading, setCrudLoading] = useState<'create' | 'edit' | 'delete' | 'clone' | 'summary' | null>(null);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [currentEventDetails, setCurrentEventDetails] = useState<Event | null>(null);
+
+  const [users, setUsers] = useState<any[]>([]);
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [participantsLoading, setParticipantsLoading] = useState(true);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -130,6 +136,23 @@ export const AdminPage: React.FC = () => {
       }
     };
     loadEventDetails();
+  }, [selectedEventId]);
+
+  useEffect(() => {
+    setUsersLoading(true);
+    adminService.getAllUsers().then(res => {
+      setUsers(res.data || []);
+      setUsersLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!selectedEventId) return;
+    setParticipantsLoading(true);
+    adminService.getEventParticipants(selectedEventId).then(res => {
+      setParticipants(res.data || []);
+      setParticipantsLoading(false);
+    });
   }, [selectedEventId]);
 
   // Helper to refresh events
@@ -233,6 +256,12 @@ export const AdminPage: React.FC = () => {
     } finally {
       setCrudLoading(null);
     }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    await adminService.deleteUser(userId);
+    setUsers(users => users.filter(u => u._id !== userId));
   };
 
   // Redirect if not admin
@@ -388,92 +417,153 @@ export const AdminPage: React.FC = () => {
 
         {/* Analytics Content */}
         {analytics && !isLoading && (
-          <div className="space-y-8">
-            {/* Analytics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="card-primary p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Participants</p>
-                    <p className="text-2xl font-bold text-foreground">{totalParticipants}</p>
-                  </div>
-                  <Users className="w-8 h-8 text-primary" />
-                </div>
-              </div>
-              
-              <div className="card-primary p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Downloads</p>
-                    <p className="text-2xl font-bold text-foreground">{totalDownloads}</p>
-                  </div>
-                  <Download className="w-8 h-8 text-primary" />
-                </div>
-              </div>
-              
-              <div className="card-primary p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Questions Asked</p>
-                    <p className="text-2xl font-bold text-foreground">{totalQuestions}</p>
-                  </div>
-                  <MessageSquare className="w-8 h-8 text-primary" />
-                </div>
-              </div>
-              
-              <div className="card-primary p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Avg Score</p>
-                    <p className="text-2xl font-bold text-foreground">{avgScore}</p>
-                  </div>
-                  <Award className="w-8 h-8 text-primary" />
-                </div>
-              </div>
-            </div>
+          <Tabs
+            tabs={[
+              {
+                label: 'Analytics',
+                content: (
+                  <div className="space-y-8">
+                    {/* Analytics Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div className="card-primary p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Total Participants</p>
+                            <p className="text-2xl font-bold text-foreground">{totalParticipants}</p>
+                          </div>
+                          <Users className="w-8 h-8 text-primary" />
+                        </div>
+                      </div>
+                      
+                      <div className="card-primary p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Total Downloads</p>
+                            <p className="text-2xl font-bold text-foreground">{totalDownloads}</p>
+                          </div>
+                          <Download className="w-8 h-8 text-primary" />
+                        </div>
+                      </div>
+                      
+                      <div className="card-primary p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Questions Asked</p>
+                            <p className="text-2xl font-bold text-foreground">{totalQuestions}</p>
+                          </div>
+                          <MessageSquare className="w-8 h-8 text-primary" />
+                        </div>
+                      </div>
+                      
+                      <div className="card-primary p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Avg Score</p>
+                            <p className="text-2xl font-bold text-foreground">{avgScore}</p>
+                          </div>
+                          <Award className="w-8 h-8 text-primary" />
+                        </div>
+                      </div>
+                    </div>
 
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="card-primary p-6">
-                <h3 className="text-subtitle text-foreground mb-6">Engagement Breakdown</h3>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie 
-                        data={engagementData} 
-                        cx="50%" 
-                        cy="50%" 
-                        innerRadius={60} 
-                        outerRadius={100} 
-                        paddingAngle={5} 
-                        dataKey="value"
-                      >
-                        {engagementData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                    {/* Charts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      <div className="card-primary p-6">
+                        <h3 className="text-subtitle text-foreground mb-6">Engagement Breakdown</h3>
+                        <div className="h-80">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie 
+                                data={engagementData} 
+                                cx="50%" 
+                                cy="50%" 
+                                innerRadius={60} 
+                                outerRadius={100} 
+                                paddingAngle={5} 
+                                dataKey="value"
+                              >
+                                {engagementData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                      
+                      <div className="card-primary p-6">
+                        <h3 className="text-subtitle text-foreground mb-6">Top Users by Score</h3>
+                        <div className="h-80">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={topUsersData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                              <YAxis />
+                              <Tooltip />
+                              <Bar dataKey="score" fill="#007AFF" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                label: 'Users',
+                content: (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-title text-foreground">All Users</h2>
+                      <span className="text-caption text-muted-foreground">Total: {usersLoading ? '...' : users.length}</span>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full border rounded-lg">
+                        <thead>
+                          <tr className="bg-muted">
+                            <th className="px-4 py-2 text-left">Name</th>
+                            <th className="px-4 py-2 text-left">Email</th>
+                            <th className="px-4 py-2 text-left">Role</th>
+                            <th className="px-4 py-2 text-left">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {usersLoading ? (
+                            <tr><td colSpan={4} className="text-center py-4">Loading...</td></tr>
+                          ) : users.length === 0 ? (
+                            <tr><td colSpan={4} className="text-center py-4">No users found.</td></tr>
+                          ) : users.map(user => (
+                            <tr key={user._id} className="border-t">
+                              <td className="px-4 py-2">{user.name}</td>
+                              <td className="px-4 py-2">{user.email}</td>
+                              <td className="px-4 py-2">{user.role}</td>
+                              <td className="px-4 py-2">
+                                <button onClick={() => handleDeleteUser(user._id)} className="btn-destructive btn-sm">Delete</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="mt-8">
+                      <h3 className="text-subtitle text-foreground mb-2">Users in Session</h3>
+                      <span className="text-caption text-muted-foreground">{participantsLoading ? '...' : participants.length} in session</span>
+                      <ul className="mt-2 space-y-1">
+                        {participantsLoading ? (
+                          <li>Loading...</li>
+                        ) : participants.length === 0 ? (
+                          <li>No participants in this session.</li>
+                        ) : participants.map(u => (
+                          <li key={u._id} className="text-body">{u.name} ({u.email})</li>
                         ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              
-              <div className="card-primary p-6">
-                <h3 className="text-subtitle text-foreground mb-6">Top Users by Score</h3>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={topUsersData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="score" fill="#007AFF" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-          </div>
+                      </ul>
+                    </div>
+                  </div>
+                ),
+              },
+            ]}
+          />
         )}
 
         {/* No Data State */}

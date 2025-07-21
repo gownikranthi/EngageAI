@@ -35,4 +35,16 @@ export const adminService = {
     const response = await api.get(`/admin/analytics/${eventId}`);
     return response.data;
   },
+  async getAllUsers() {
+    const response = await api.get('/admin/users');
+    return response.data;
+  },
+  async deleteUser(userId: string) {
+    const response = await api.delete(`/admin/users/${userId}`);
+    return response.data;
+  },
+  async getEventParticipants(eventId: string) {
+    const response = await api.get(`/admin/events/${eventId}/participants`);
+    return response.data;
+  },
 };
