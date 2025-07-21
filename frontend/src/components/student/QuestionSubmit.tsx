@@ -1,52 +1,54 @@
 import React, { useState } from 'react';
 import { useSocket } from '../../hooks/useSocket';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
 import { useAppSelector } from '../../redux/hooks';
+import { Send } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
+import { Button } from '../ui/button'; // Corrected import path
+import { Input } from '../ui/input';   // Assuming you have an Input component as well
 
 interface QuestionSubmitProps {
   eventId: string;
 }
 
 export const QuestionSubmit: React.FC<QuestionSubmitProps> = ({ eventId }) => {
-  const { token, user } = useAppSelector(state => state.auth);
-  const socket = useSocket(token);
+  const socket = useSocket();
+  const { user } = useAppSelector((state) => state.auth);
   const { toast } = useToast();
-  const [question, setQuestion] = useState('');
+  const [questionText, setQuestionText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (question.trim() && socket && user) {
-      setIsSubmitting(true);
-      socket.emit('question:submit', {
-        eventId,
-        questionText: question,
-        user: { id: user._id, name: user.name },
-      }, () => {
-        setQuestion('');
-        setIsSubmitting(false);
-        toast({
-          title: "Success",
-          description: "Your question has been submitted.",
-        });
-      });
-    }
+    if (!socket || !user || !questionText.trim()) return;
+
+    setIsSubmitting(true);
+    socket.emit('question:submit', {
+      eventId,
+      questionText,
+      user: { id: user._id, name: user.name }
+    });
+    
+    setQuestionText('');
+    setIsSubmitting(false);
+    toast({ title: "Question Submitted!", description: "Your question has been sent to the presenter." });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Textarea
-        value={question}
-        onChange={(e) => setQuestion(e.target.value)}
-        placeholder="Ask a question..."
-        rows={3}
-        disabled={isSubmitting}
-      />
-      <Button type="submit" disabled={!question.trim() || isSubmitting}>
-        {isSubmitting ? 'Submitting...' : 'Submit Question'}
-      </Button>
-    </form>
+    <div className="card-primary p-6 mt-8">
+      <h3 className="text-subtitle text-foreground mb-4">Ask a Question</h3>
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
+        <Input
+          type="text"
+          value={questionText}
+          onChange={(e) => setQuestionText(e.target.value)}
+          placeholder="Type your question here..."
+          className="flex-grow"
+          disabled={isSubmitting}
+        />
+        <Button type="submit" disabled={isSubmitting}>
+          <Send size={18} />
+        </Button>
+      </form>
+    </div>
   );
 }; 
