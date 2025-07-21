@@ -44,6 +44,8 @@ export const AdminPage: React.FC = () => {
   const [participants, setParticipants] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [participantsLoading, setParticipantsLoading] = useState(true);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [participantsError, setParticipantsError] = useState<string | null>(null);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -140,8 +142,12 @@ export const AdminPage: React.FC = () => {
 
   useEffect(() => {
     setUsersLoading(true);
+    setUsersError(null);
     adminService.getAllUsers().then(res => {
       setUsers(res.data || []);
+      setUsersLoading(false);
+    }).catch(err => {
+      setUsersError('Failed to load users. Please try again later.');
       setUsersLoading(false);
     });
   }, []);
@@ -149,8 +155,12 @@ export const AdminPage: React.FC = () => {
   useEffect(() => {
     if (!selectedEventId) return;
     setParticipantsLoading(true);
+    setParticipantsError(null);
     adminService.getEventParticipants(selectedEventId).then(res => {
       setParticipants(res.data || []);
+      setParticipantsLoading(false);
+    }).catch(err => {
+      setParticipantsError('Failed to load participants. Please try again later.');
       setParticipantsLoading(false);
     });
   }, [selectedEventId]);
@@ -529,7 +539,9 @@ export const AdminPage: React.FC = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {usersLoading ? (
+                          {usersError ? (
+                            <tr><td colSpan={4} className="text-center py-4 text-destructive">{usersError}</td></tr>
+                          ) : usersLoading ? (
                             <tr><td colSpan={4} className="text-center py-4">Loading...</td></tr>
                           ) : users.length === 0 ? (
                             <tr><td colSpan={4} className="text-center py-4">No users found.</td></tr>
@@ -550,7 +562,9 @@ export const AdminPage: React.FC = () => {
                       <h3 className="text-subtitle text-foreground mb-2">Users in Session</h3>
                       <span className="text-caption text-muted-foreground">{participantsLoading ? '...' : participants.length} in session</span>
                       <ul className="mt-2 space-y-1">
-                        {participantsLoading ? (
+                        {participantsError ? (
+                          <li className="text-destructive">{participantsError}</li>
+                        ) : participantsLoading ? (
                           <li>Loading...</li>
                         ) : participants.length === 0 ? (
                           <li>No participants in this session.</li>

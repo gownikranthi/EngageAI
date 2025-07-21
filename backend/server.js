@@ -21,7 +21,7 @@ const { swaggerUi, specs } = require('./swagger');
 
 // Import Socket.IO handler
 const SocketHandler = require('./socket/socketHandler');
-const { generalLimiter, eventLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
+const { generalLimiter, adminLimiter, eventLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
 const sanitizeMiddleware = require('./middleware/sanitize');
 const { initializeVectorStore } = require('./services/ragService');
 const chatController = require('./controllers/chatController');
@@ -75,7 +75,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/events', eventLimiter, eventRoutes); // Moderate limiter for events
 app.use('/api/v1/engage', engagementRoutes);
 app.use('/api/v1/scores', scoreRoutes);
-app.use('/api/v1/admin', sensitiveLimiter, adminRoutes); // Sensitive limiter for admin actions
+app.use('/api/v1/admin', adminLimiter, adminRoutes); // More generous limiter for admin actions
 app.use('/api/v1/polls', pollRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/profile', profileRoutes);

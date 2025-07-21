@@ -10,6 +10,16 @@ const generalLimiter = rateLimit({
   }
 });
 
+// More generous limiter for admin routes
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // much higher for admin
+  message: {
+    success: false,
+    message: 'Too many admin requests, please try again later.'
+  }
+});
+
 // Moderate limiter for events: 50 requests per 10 minutes per IP
 const eventLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
@@ -30,4 +40,4 @@ const sensitiveLimiter = rateLimit({
   }
 });
 
-module.exports = { generalLimiter, eventLimiter, sensitiveLimiter }; 
+module.exports = { generalLimiter, adminLimiter, eventLimiter, sensitiveLimiter }; 
