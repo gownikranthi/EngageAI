@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../hooks/useSocket';
 import { Question } from '../../services/events';
-import { User, MessageCircle } from 'lucide-react';
+import { User, MessageCircle, Send } from 'lucide-react';
 
 interface AdminQAFeedProps {
   initialQuestions: Question[];
@@ -10,6 +10,8 @@ interface AdminQAFeedProps {
 export const AdminQAFeed: React.FC<AdminQAFeedProps> = ({ initialQuestions }) => {
   const socket = useSocket();
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
+  const [newQuestion, setNewQuestion] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setQuestions(initialQuestions);
@@ -19,7 +21,6 @@ export const AdminQAFeed: React.FC<AdminQAFeedProps> = ({ initialQuestions }) =>
     if (!socket) return;
 
     const handleNewQuestion = (newQuestion: Question) => {
-      // Add new questions to the top of the list
       setQuestions(prev => [newQuestion, ...prev]);
     };
 
@@ -30,9 +31,31 @@ export const AdminQAFeed: React.FC<AdminQAFeedProps> = ({ initialQuestions }) =>
     };
   }, [socket]);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newQuestion.trim() || !socket) return;
+    setIsSubmitting(true);
+    socket.emit('qa:submit', { question: newQuestion });
+    setNewQuestion('');
+    setIsSubmitting(false);
+  };
+
   return (
     <div className="card-primary p-6 mt-8">
       <h3 className="text-subtitle text-foreground mb-4">Live Q&A Feed</h3>
+      <form onSubmit={handleSubmit} className="flex gap-2 mb-4">
+        <input
+          type="text"
+          value={newQuestion}
+          onChange={e => setNewQuestion(e.target.value)}
+          placeholder="Type a question to add..."
+          className="input-primary flex-1"
+          disabled={isSubmitting}
+        />
+        <button type="submit" className="btn-primary flex items-center gap-1" disabled={isSubmitting || !newQuestion.trim()}>
+          <Send size={16} /> Add
+        </button>
+      </form>
       {questions.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <MessageCircle className="mx-auto mb-2" size={32} />

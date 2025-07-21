@@ -1,4 +1,5 @@
 const Event = require('../models/Event');
+const Engagement = require('../models/Engagement');
 
 class SocketHandler {
   constructor(io) {
@@ -33,7 +34,7 @@ class SocketHandler {
       }
     });
 
-    socket.on('poll:vote', async ({ eventId, pollId, optionId }) => {
+    socket.on('poll:vote', async ({ eventId, pollId, optionId, userId }) => {
       try {
         const event = await Event.findById(eventId);
         if (!event) return;
@@ -43,6 +44,10 @@ class SocketHandler {
           if (option) {
             option.votes += 1;
             await event.save();
+            // Log engagement
+            if (userId) {
+              await Engagement.create({ userId, eventId, action: 'poll', metadata: { pollId, optionId } });
+            }
             this.io.to(eventId).emit('poll:update', poll);
           }
         }
@@ -67,6 +72,10 @@ class SocketHandler {
         await event.save();
 
         const createdQuestion = event.questions[event.questions.length - 1];
+        // Log engagement
+        if (user && user.id) {
+          await Engagement.create({ userId: user.id, eventId, action: 'qa', metadata: { question: questionText } });
+        }
         // Broadcast the new question to everyone in the event room
         this.io.to(eventId).emit('question:new', createdQuestion);
       } catch (error) {
