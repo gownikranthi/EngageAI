@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../../hooks/useSocket';
+import { useAppSelector } from '../../redux/hooks';
 import { Poll } from '../../services/events';
 
 interface LivePollProps {
@@ -8,6 +9,7 @@ interface LivePollProps {
 
 export const LivePoll: React.FC<LivePollProps> = ({ eventId }) => {
   const socket = useSocket();
+  const { user } = useAppSelector((state) => state.auth);
   const [activePoll, setActivePoll] = useState<Poll | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
 
@@ -32,8 +34,8 @@ export const LivePoll: React.FC<LivePollProps> = ({ eventId }) => {
   }, [socket]);
 
   const handleVote = (optionId: string) => {
-    if (socket && activePoll) {
-      socket.emit('poll:vote', { eventId, pollId: activePoll._id, optionId });
+    if (socket && activePoll && user) {
+      socket.emit('poll:vote', { eventId, pollId: activePoll._id, optionId, userId: user._id });
       setHasVoted(true);
     }
   };
