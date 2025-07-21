@@ -261,17 +261,16 @@ export const AdminPage: React.FC = () => {
   const engagementBreakdown = analytics?.engagementBreakdown || analytics?.engagement || {};
   const topUsers = analytics?.topParticipants || analytics?.topUsers || [];
 
-  // Data preparation for charts
+  // Data preparation for charts (map backend fields to expected frontend structure)
   const engagementData = analytics ? [
-    { name: 'Polls', value: engagementBreakdown.polls || engagementBreakdown.totalPolls || 0, color: '#007AFF' },
-    { name: 'Questions', value: engagementBreakdown.questions || engagementBreakdown.totalQA || 0, color: '#34C759' },
-    { name: 'Downloads', value: engagementBreakdown.downloads || engagementBreakdown.totalDownloads || 0, color: '#FF9500' },
-    { name: 'Time Spent', value: engagementBreakdown.timeSpent || 0, color: '#AF52DE' },
+    { name: 'Polls', value: analytics.engagement?.totalPolls || 0, color: '#007AFF' },
+    { name: 'Questions', value: analytics.engagement?.totalQA || 0, color: '#34C759' },
+    { name: 'Downloads', value: analytics.engagement?.totalDownloads || 0, color: '#FF9500' },
   ] : [];
 
-  const topUsersData = (topUsers || []).map(user => ({
-    name: user.name || user.user?.name || 'User',
-    score: user.score ?? user.engagementCount ?? 0,
+  const topUsersData = (analytics?.topParticipants || []).map(user => ({
+    name: user.user?.name || 'User',
+    score: user.engagementCount || 0,
   }));
 
   return (

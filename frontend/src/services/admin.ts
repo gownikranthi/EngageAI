@@ -1,29 +1,32 @@
 import api from './api';
 
 export interface AdminAnalytics {
-  eventId: string;
-  totalParticipants: number;
-  engagementBreakdown: {
-    polls: number;
-    questions: number;
-    downloads: number;
-    timeSpent: number;
-  };
-  topUsers: Array<{
-    id: string;
+  event: {
+    _id: string;
     name: string;
-    score: number;
-    engagement: {
-      polls: number;
-      questions: number;
-      downloads: number;
-      timeSpent: number;
+    description: string;
+    startTime: string;
+    endTime: string;
+  };
+  participation: {
+    totalParticipants: number;
+    activeParticipants: number;
+    averageSessionDuration: number;
+  };
+  engagement: {
+    totalPolls: number;
+    totalQA: number;
+    totalDownloads: number;
+    totalEngagements: number;
+  };
+  topParticipants: Array<{
+    user: {
+      name: string;
+      email: string;
     };
-  }>;
-  timelineData: Array<{
-    timestamp: string;
-    participants: number;
-    activity: number;
+    engagementCount: number;
+    sessionDuration: number;
+    joinTime: string;
   }>;
 }
 
