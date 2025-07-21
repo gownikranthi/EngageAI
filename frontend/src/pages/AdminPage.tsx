@@ -249,6 +249,18 @@ export const AdminPage: React.FC = () => {
     );
   }
 
+  // Defensive mapping for analytics
+  const totalParticipants = analytics?.participation?.totalParticipants ?? analytics?.totalParticipants ?? 0;
+  const totalDownloads = analytics?.engagement?.totalDownloads ?? analytics?.engagementBreakdown?.downloads ?? 0;
+  const totalQuestions = analytics?.engagement?.totalQA ?? analytics?.engagementBreakdown?.questions ?? 0;
+  const avgScore = analytics?.topParticipants?.length > 0
+    ? (
+        analytics.topParticipants.reduce((sum, p) => sum + (p.engagementCount || 0), 0) / analytics.topParticipants.length
+      ).toFixed(1)
+    : '0.0';
+  const engagementBreakdown = analytics?.engagementBreakdown || analytics?.engagement || {};
+  const topUsers = analytics?.topParticipants || analytics?.topUsers || [];
+
   // Data preparation for charts
   const engagementData = analytics ? [
     { name: 'Polls', value: analytics.engagementBreakdown?.polls || 0, color: '#007AFF' },
@@ -384,7 +396,7 @@ export const AdminPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Participants</p>
-                    <p className="text-2xl font-bold text-foreground">{analytics.totalParticipants || 0}</p>
+                    <p className="text-2xl font-bold text-foreground">{totalParticipants}</p>
                   </div>
                   <Users className="w-8 h-8 text-primary" />
                 </div>
@@ -394,7 +406,7 @@ export const AdminPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Downloads</p>
-                    <p className="text-2xl font-bold text-foreground">{analytics.totalDownloads || 0}</p>
+                    <p className="text-2xl font-bold text-foreground">{totalDownloads}</p>
                   </div>
                   <Download className="w-8 h-8 text-primary" />
                 </div>
@@ -404,7 +416,7 @@ export const AdminPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Questions Asked</p>
-                    <p className="text-2xl font-bold text-foreground">{analytics.totalQuestions || 0}</p>
+                    <p className="text-2xl font-bold text-foreground">{totalQuestions}</p>
                   </div>
                   <MessageSquare className="w-8 h-8 text-primary" />
                 </div>
@@ -414,7 +426,7 @@ export const AdminPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Avg Score</p>
-                    <p className="text-2xl font-bold text-foreground">{analytics.averageScore?.toFixed(1) || '0.0'}</p>
+                    <p className="text-2xl font-bold text-foreground">{avgScore}</p>
                   </div>
                   <Award className="w-8 h-8 text-primary" />
                 </div>

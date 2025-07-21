@@ -12,6 +12,7 @@ import { RAGChatbot } from '../components/chatbot/RAGChatbot';
 import '../components/chatbot/RAGChatbot.css';
 import { Button } from '../components/ui/button';
 import { SkeletonCard } from '../components/ui/SkeletonCard';
+import { profileService } from '../services/profileService';
 
 export const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -21,6 +22,8 @@ export const DashboardPage: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const unreadCount = notifications.filter(n => !n.read).length;
   const navigate = useNavigate();
+  const [history, setHistory] = useState<{ eventName: string; eventDate: string; yourScore: number }[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   useEffect(() => {
     dispatch(fetchEvents());
@@ -46,15 +49,25 @@ export const DashboardPage: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    profileService.getMyHistory().then(res => {
+      setHistory(res.data || []);
+      setHistoryLoading(false);
+    });
+  }, []);
+
   // Defensive coding to handle undefined values
   const upcomingEvents = events?.filter(event => new Date(event.startTime) > new Date()) || [];
   const pastEvents = events?.filter(event => new Date(event.startTime) <= new Date()) || [];
   const attendedEvents = events?.filter(event => event.participants?.includes(user?._id || '')) || [];
 
+  const eventsAttended = history.length;
+  const engagementScore = history.reduce((sum, h) => sum + (h.yourScore || 0), 0);
+
   const stats = [
     {
       label: 'Events Attended',
-      value: attendedEvents.length,
+      value: historyLoading ? '...' : eventsAttended,
       icon: Users,
       color: 'text-blue-500'
     },
@@ -72,7 +85,7 @@ export const DashboardPage: React.FC = () => {
     },
     {
       label: 'Engagement Score',
-      value: user?.engagementScore || 0,
+      value: historyLoading ? '...' : engagementScore,
       icon: Award,
       color: 'text-yellow-500'
     },
