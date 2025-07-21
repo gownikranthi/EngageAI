@@ -10,6 +10,7 @@ const { createNotification } = require('../utils/notification');
 const User = require('../models/User');
 const EventSummary = require('../models/EventSummary');
 const { generateEventSummary } = require('../services/aiScribeService');
+const { getUserEventScore } = require('../utils/score');
 
 const router = express.Router();
 
@@ -224,10 +225,10 @@ router.post('/', auth, admin, eventValidation, handleValidationErrors, async (re
         }
       });
     }
-    // Notify all users
-    const allUsers = await User.find({});
+    // Notify all users (students)
+    const allUsers = await User.find({ role: 'student' });
     for (const u of allUsers) {
-      await createNotification(u._id, `A new event "${event.name}" has been created!`, `/events/${event._id}`, req.app.get('io'));
+      await createNotification(u._id, `New event: "${event.name}" is coming up!`, `/event/${event._id}`, req.app.get('io'));
     }
     return sendResponse(res, {
       success: true,
@@ -374,6 +375,9 @@ router.post('/:id/join', auth, async (req, res) => {
     });
 
     if (existingParticipation) {
+      // Calculate and notify engagement score
+      const score = await getUserEventScore(userId, eventId);
+      await createNotification(userId, `Your engagement score for "${event.name}" is ${score}.`, `/event/${eventId}`, req.app.get('io'));
       return sendResponse(res, {
         success: true,
         message: 'User is already participating in this event',
@@ -390,6 +394,10 @@ router.post('/:id/join', auth, async (req, res) => {
     });
 
     await participation.save();
+
+    // Calculate and notify engagement score
+    const score = await getUserEventScore(userId, eventId);
+    await createNotification(userId, `Your engagement score for "${event.name}" is ${score}.`, `/event/${eventId}`, req.app.get('io'));
 
     return sendResponse(res, {
       success: true,
