@@ -28,6 +28,7 @@ const chatController = require('./controllers/chatController');
 
 // Initialize express app
 const app = express();
+app.set('trust proxy', 1); // Trust the first proxy (Render)
 const server = createServer(app);
 
 // Initialize Socket.IO
