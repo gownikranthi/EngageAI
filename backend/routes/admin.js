@@ -1,178 +1,125 @@
 const express = require('express');
-const Event = require('../models/Event');
-const Participation = require('../models/Participation');
-const Engagement = require('../models/Engagement');
-const User = require('../models/User');
+const router = express.Router();
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
+const User = require('../models/User');
+const Participation = require('../models/Participation');
+const Event = require('../models/Event');
+const Engagement = require('../models/Engagement');
 
-const router = express.Router();
+// Middleware to ensure all routes in this file are protected for admins
+router.use(auth, admin);
 
 /**
- * @swagger
- * /admin/analytics/{eventId}:
- *   get:
- *     summary: Get analytics for an event
- *     description: Admin only. Retrieves analytics data for a specific event.
- *     parameters:
- *       - in: path
- *         name: eventId
- *         required: true
- *         schema:
- *           type: string
- *         description: Event ID
- *     responses:
- *       200:
- *         description: Analytics data
- *       400:
- *         description: Invalid event ID
- *       404:
- *         description: Event not found
+ * @route   GET /api/v1/admin/users
+ * @desc    Get all users in the system
+ * @access  Private (Admin)
  */
-// GET /api/v1/admin/analytics/:eventId
-router.get('/analytics/:eventId', auth, admin, async (req, res) => {
+router.get('/users', async (req, res) => {
+  try {
+    // Find all users and exclude their passwords from the result
+    const users = await User.find().select('-password');
+    res.json({ success: true, data: users });
+  } catch (error) {
+    console.error('Error fetching all users:', error);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
+
+/**
+ * @route   DELETE /api/v1/admin/users/:id
+ * @desc    Delete a user
+ * @access  Private (Admin)
+ */
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Optional: Add logic here to clean up related data (e.g., participations, engagements)
+    // For now, we'll just delete the user document.
+    await user.remove();
+
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    console.error(`Error deleting user ${req.params.id}:`, error);
+    if (error.kind === 'ObjectId') {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
+
+
+/**
+ * @route   GET /api/v1/admin/events/:eventId/participants
+ * @desc    Get all participants for a specific event
+ * @access  Private (Admin)
+ */
+router.get('/events/:eventId/participants', async (req, res) => {
   try {
     const { eventId } = req.params;
 
-    // Validate ObjectId
-    if (!eventId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid event ID'
-      });
-    }
-
-    // Check if event exists
+    // First, check if the event exists
     const event = await Event.findById(eventId);
     if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: 'Event not found'
-      });
+      return res.status(404).json({ success: false, message: 'Event not found' });
     }
 
-    // Get participation statistics
-    const totalParticipants = await Participation.countDocuments({ eventId });
-    
-    // Get engagement statistics
-    const pollEngagements = await Engagement.countDocuments({ 
-      eventId, 
-      action: 'poll' 
-    });
-    const qaEngagements = await Engagement.countDocuments({ 
-      eventId, 
-      action: 'qa' 
-    });
-    const downloadEngagements = await Engagement.countDocuments({ 
-      eventId, 
-      action: 'download' 
-    });
+    // Find all participation records for this event and populate the user details
+    const participations = await Participation.find({ eventId })
+      .populate('userId', 'name email'); // 'userId' is the field in Participation, 'name email' are fields from User
 
-    // Get average session duration
-    const participations = await Participation.find({ eventId });
-    let totalDuration = 0;
-    let activeParticipants = 0;
+    // Extract just the user information from the participation records
+    const participants = participations.map(p => p.userId).filter(p => p); // Filter out nulls if a user was deleted
 
-    participations.forEach(participation => {
-      const duration = participation.lastSeen - participation.joinTime;
-      if (duration > 0) {
-        totalDuration += duration;
-        activeParticipants++;
-      }
-    });
+    res.json({ success: true, data: participants });
+  } catch (error) {
+    console.error(`Error fetching participants for event ${req.params.eventId}:`, error);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+});
 
-    const averageSessionDuration = activeParticipants > 0 
-      ? Math.round((totalDuration / activeParticipants) / (1000 * 60)) // Convert to minutes
-      : 0;
-
-    // Get top participants by engagement
-    const topParticipants = await Participation.aggregate([
-      { $match: { eventId: event._id } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'userId',
-          foreignField: '_id',
-          as: 'user'
-        }
-      },
-      { $unwind: '$user' },
-      {
-        $lookup: {
-          from: 'engagements',
-          let: { userId: '$userId', eventId: '$eventId' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$userId', '$$userId'] },
-                    { $eq: ['$eventId', '$$eventId'] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'engagements'
-        }
-      },
-      {
-        $addFields: {
-          engagementCount: { $size: '$engagements' },
-          sessionDuration: {
-            $divide: [
-              { $subtract: ['$lastSeen', '$joinTime'] },
-              1000 * 60 // Convert to minutes
-            ]
-          }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          'user.name': 1,
-          'user.email': 1,
-          engagementCount: 1,
-          sessionDuration: 1,
-          joinTime: 1
-        }
-      },
-      { $sort: { engagementCount: -1 } },
-      { $limit: 10 }
+/**
+ * @route   GET /api/v1/admin/analytics/summary
+ * @desc    Get summary analytics for the admin dashboard
+ * @access  Private (Admin)
+ */
+router.get('/analytics/summary', async (req, res) => {
+  try {
+    const [
+      totalUsers,
+      totalEvents,
+      totalEngagements,
+      avgEngagementPerEvent,
+      eventsToday
+    ] = await Promise.all([
+      User.countDocuments(),
+      Event.countDocuments(),
+      Engagement.countDocuments(),
+      Engagement.aggregate([
+        { $group: { _id: "$eventId", count: { $sum: 1 } } },
+        { $group: { _id: null, avg: { $avg: "$count" } } }
+      ]),
+      Event.find({ date: { $gte: new Date().setHours(0, 0, 0, 0) } }).countDocuments()
     ]);
-
-    const analytics = {
-      event: {
-        _id: event._id,
-        name: event.name,
-        description: event.description,
-        startTime: event.startTime,
-        endTime: event.endTime
-      },
-      participation: {
-        totalParticipants,
-        activeParticipants,
-        averageSessionDuration
-      },
-      engagement: {
-        totalPolls: pollEngagements,
-        totalQA: qaEngagements,
-        totalDownloads: downloadEngagements,
-        totalEngagements: pollEngagements + qaEngagements + downloadEngagements
-      },
-      topParticipants
-    };
 
     res.json({
       success: true,
-      data: analytics
+      data: {
+        totalUsers,
+        totalEvents,
+        totalEngagements,
+        avgEngagementPerEvent: avgEngagementPerEvent[0]?.avg.toFixed(2) || 0,
+        eventsToday
+      }
     });
   } catch (error) {
-    console.error('Analytics error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while generating analytics'
-    });
+    console.error('Error fetching analytics summary:', error);
+    res.status(500).json({ success: false, message: 'Server Error' });
   }
 });
 
